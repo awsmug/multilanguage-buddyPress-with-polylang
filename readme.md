@@ -12,7 +12,7 @@ At first yo need to have installed and activated the BuddyPress (configuring com
    
 ### 2. Add the BuddyPress pages for every language
    
-You need to add every page you refered in the BuddyPress settings for every language again and refer it to the main language page on the right side of your page. 
+You need to add every page you refered in the BuddyPress settings for every language again and add the translations to main language page on the right side of your page in the "Languages" box. If you have referenced it, BuddyPress should detect the translated sites and show the correct content on the sites (like the activity stream page, groups page and so on). 
    
 ## Further development
  

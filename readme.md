@@ -16,4 +16,4 @@ You need to add every page you refered in the BuddyPress settings for every lang
    
 ## Further development
  
-We are going on to add support for multilanguage for Emails. If you have any other ideas, please let us know and create an issue for this.
+We are going on to add support for multilanguage for Emails. If you have any other ideas, please let us know and [create an issue](https://github.com/awsmug/multilanguage-buddyPress-with-polylang/issues) for this.

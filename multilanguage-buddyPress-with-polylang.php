@@ -57,14 +57,21 @@ class Multilanguage_BP_Polylang {
 	 */
 	protected function init() {
 		if( ! function_exists( 'buddypress' ) ) {
+			// We should output some information fot the user
 			// throw new Exception( __( 'BuddyPress is not loaded', 'buddypress-polylang' ), 1 );
 		}
 
+		// Including all needed files
 		$this->includes();
 
+		// Getting some base information from Polylang (because used later)
 		BP_Polylang::get_instance();
+
+		// Loading some base hooks for overwriting locales early enough, replacing Id's and rewriting URL's for BuddyPress
 		BP_Translate_Core::get_instance();
-		BP_Translate_Emails::get_instance();
+
+		// Translating Emails of BuddyPress
+		BP_Email_Translate::get_instance();
 	}
 
 	/**

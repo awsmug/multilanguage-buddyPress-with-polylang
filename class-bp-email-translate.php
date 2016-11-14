@@ -16,6 +16,12 @@ class BP_Translate_Emails {
 	protected static $instance;
 
 	/**
+	 * All languages added by Polylang
+	 * @var array
+	 */
+	protected $languages = array();
+
+	/**
 	 * Locale for setting up emails
 	 *
 	 * @since 1.0.0
@@ -39,12 +45,42 @@ class BP_Translate_Emails {
 	 * @since 1.0.0
 	 */
 	protected function init() {
+
+		add_action( 'plugins_loaded', array( $this, 'init_polylang_languages' ) );
 		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
 		add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
 		add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
 
 		if( is_admin() ){
 			return;
+		}
+	}
+
+	/**
+	 * Initializing an array for the languages
+	 *
+	 * @since 1.0.0
+	 */
+	public function init_polylang_languages(){
+		$languages = get_terms( array(
+          'taxonomy' => 'language',
+          'hide_empty' => false,
+        ) );
+
+		// Stopping if no languages existing
+		if( is_wp_error( $languages ) ) {
+			return;
+		}
+
+		foreach( $languages AS $language ) {
+			$description = maybe_unserialize( $language->description );
+
+			$this->languages[ $language->slug ] = array(
+				'name' => $language->name,
+				'slug'  => $language->slug,
+				'locale' => $description[ 'locale' ],
+				'term_id' => $language->term_id,
+			);
 		}
 	}
 
@@ -144,6 +180,9 @@ class BP_Translate_Emails {
 	 * @return string $locale Filtered locale
 	 */
 	public function set_temporary_locale( $locale ) {
+		if( empty( $this->temp_locale ) ) {
+			return $locale;
+		}
 		return $this->temp_locale;
 	}
 

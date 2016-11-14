@@ -17,7 +17,7 @@ if( ! defined( 'ABSPATH' ) ) {
  *
  * This class contains basic functionality for getting BuddyPress and Polylang together
  */
-class BP_Polylang {
+class Multilanguage_BP_Polylang {
 	/**
 	 * Instance
 	 *
@@ -62,14 +62,27 @@ class BP_Polylang {
 
 		$this->includes();
 
+		BP_Polylang::get_instance();
 		BP_Translate_Core::get_instance();
 		BP_Translate_Emails::get_instance();
+	}
+
+	/**
+	 * Polylang Object
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return BP_Polylang
+	 */
+	public function polylang() {
+		return BP_Polylang::get_instance();
 	}
 
 	/**
 	 * Include needed files here
 	 */
 	private function includes() {
+		require_once $this->get_path() . '/class-polylang.php';
 		require_once $this->get_path() . '/class-bp-core-translate.php';
 		require_once $this->get_path() . '/class-bp-email-translate.php';
 	}
@@ -106,10 +119,10 @@ class BP_Polylang {
 /**
  * BuddyPress Polylang super function
  *
- * @return BuddyPress_Polylang
+ * @return Multilanguage_BP_Polylang
  */
 function bppl() {
-	return BP_Polylang::get_instance();
+	return Multilanguage_BP_Polylang::get_instance();
 }
 
 // Get the shit running! :)

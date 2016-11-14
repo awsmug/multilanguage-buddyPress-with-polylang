@@ -17,7 +17,7 @@ class BP_Translate_Core {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @var BuddyPress_Polylang $instance;
+	 * @var BP_Translate_Core $instance;
 	 */
 	protected static $instance;
 
@@ -44,7 +44,7 @@ class BP_Translate_Core {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return BuddyPress_Polylang $instance
+	 * @return BP_Translate_Core $instance
 	 */
 	final public static function get_instance() {
 		if ( null === static::$instance ) {
@@ -63,12 +63,18 @@ class BP_Translate_Core {
 			// throw new Exception( __( 'BuddyPress is not loaded', 'buddypress-polylang' ), 1 );
 		}
 
-		if( is_admin() ){
+		if( is_admin() ) {
 			return;
 		}
-		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
+
+		// Overwriting BP URL without language slug, becaus it don't understands the URL
 		add_filter( 'bp_uri', array( $this, 'kill_language_slug' ), 0 );
+
+		// Overwriting local before polylang des it, beyause Polylang does it too late
 		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
+
+		// Redirecting to the current language page Id's
+		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
 	}
 
 	/**

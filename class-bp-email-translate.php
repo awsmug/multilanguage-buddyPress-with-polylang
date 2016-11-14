@@ -75,6 +75,9 @@ class BP_Translate_Emails {
 
 		$locales = pll_languages_list( array( 'fields' => 'locale' ) );
 
+		// Deleting everything created before
+		$this->get_rid_of_shit();
+
 		add_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 		foreach( $locales AS $locale ) {
 			$this->temp_locale = $locale;
@@ -145,6 +148,40 @@ class BP_Translate_Emails {
 		 * @since 2.5.0
 		 */
 		do_action( 'bp_core_install_emails' );
+	}
+
+	/**
+	 * Deleting everything which was created before
+	 *
+	 * @since 1.0.0
+	 */
+	public function get_rid_of_shit() {
+		$emails = get_posts( array(
+			                     'fields'           => 'ids',
+			                     'post_status'      => 'publish',
+			                     'post_type'        => bp_get_email_post_type(),
+			                     'posts_per_page'   => -1,
+			                     'suppress_filters' => false,
+		                     ) );
+
+		if ( $emails ) {
+			foreach ( $emails as $email_id ) {
+				wp_trash_post( $email_id );
+			}
+		}
+
+		// Make sure we have no orphaned email type terms.
+		$email_types = get_terms( bp_get_email_tax_type(), array(
+			'fields'                 => 'ids',
+			'hide_empty'             => false,
+			'update_term_meta_cache' => false,
+		) );
+
+		if ( $email_types ) {
+			foreach ( $email_types as $term_id ) {
+				wp_delete_term( (int) $term_id, bp_get_email_tax_type() );
+			}
+		}
 	}
 
 	/**

@@ -11,7 +11,7 @@ class BP_Translate_Emails {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @var BuddyPress_Polylang $instance;
+	 * @var BP_Translate_Emails $instance;
 	 */
 	protected static $instance;
 
@@ -45,43 +45,9 @@ class BP_Translate_Emails {
 	 * @since 1.0.0
 	 */
 	protected function init() {
-
-		add_action( 'plugins_loaded', array( $this, 'init_polylang_languages' ) );
 		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
 		add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
 		add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
-
-		if( is_admin() ){
-			return;
-		}
-	}
-
-	/**
-	 * Initializing an array for the languages
-	 *
-	 * @since 1.0.0
-	 */
-	public function init_polylang_languages(){
-		$languages = get_terms( array(
-          'taxonomy' => 'language',
-          'hide_empty' => false,
-        ) );
-
-		// Stopping if no languages existing
-		if( is_wp_error( $languages ) ) {
-			return;
-		}
-
-		foreach( $languages AS $language ) {
-			$description = maybe_unserialize( $language->description );
-
-			$this->languages[ $language->slug ] = array(
-				'name' => $language->name,
-				'slug'  => $language->slug,
-				'locale' => $description[ 'locale' ],
-				'term_id' => $language->term_id,
-			);
-		}
 	}
 
 	/**
@@ -89,7 +55,7 @@ class BP_Translate_Emails {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return BuddyPress_Polylang $instance
+	 * @return BP_Translate_Emails $instance
 	 */
 	final public static function get_instance() {
 		if ( null === static::$instance ) {
@@ -115,7 +81,7 @@ class BP_Translate_Emails {
 
 			unload_textdomain( 'buddypress' );
 			load_plugin_textdomain( 'buddypress' );
-			$this->install_emails();
+			$this->install_emails( $locale );
 
 			// And so on...
 		}
@@ -131,9 +97,17 @@ class BP_Translate_Emails {
 	/**
 	 * Needed in the moment, because buddypress term ID is the same in every language
 	 *
-	 * @param $lang
+	 * @since 1.0.0
+	 *
+	 * @param string $locale
 	 */
-	private function install_emails( $lang ) {
+	private function install_emails( $locale ) {
+		$lang = bppl()->polylang()->get_lang_by_locale( $locale );
+
+		if( is_wp_error( $lang ) ) {
+			return;
+		}
+
 		$defaults = array(
 			'post_status' => 'publish',
 			'post_type'   => bp_get_email_post_type(),
@@ -148,6 +122,7 @@ class BP_Translate_Emails {
 			if ( ! $post_id ) {
 				continue;
 			}
+			pll_set_post_language( $post_id, $locale );
 
 			$term_id = $id . '-' . $lang;
 
@@ -157,6 +132,8 @@ class BP_Translate_Emails {
 				wp_update_term( (int) $term->term_id, bp_get_email_tax_type(), array(
 					'description' => $descriptions[ $id ],
 				) );
+
+				pll_set_term_language( $term->term_id, $lang );
 			}
 		}
 

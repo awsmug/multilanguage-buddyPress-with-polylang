@@ -98,6 +98,8 @@ class BP_Polylang {
 	/**
 	 * Flexible getting values from array
 	 *
+	 * @since 1.0.0
+	 *
 	 * @param string $key
 	 * @param string $value
 	 * @param string $return_key
@@ -126,6 +128,8 @@ class BP_Polylang {
 
 	/**
 	 * Getting a locale by language slug
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param string $locale Name of the locale
 	 *

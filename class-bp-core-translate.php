@@ -63,6 +63,7 @@ class BP_Translate_Core {
 			// throw new Exception( __( 'BuddyPress is not loaded', 'buddypress-polylang' ), 1 );
 		}
 
+		// We do not need the following functionality in the admin
 		if( is_admin() ) {
 			return;
 		}
@@ -181,15 +182,14 @@ class BP_Translate_Core {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $path Actual URL Path
+	 * @param string $url Actual URL Path
 	 *
-	 * @return string $path Actual URL Path (filtered without language
+	 * @return string $url Actual URL Path (filtered without language
 	 *
-	 * @uses pll_current_language() to get the current selected language
+	 * @uses  pll_current_language() to get the current language
 	 */
-	public function kill_language_slug( $path ) {
-		$current_language = pll_current_language();
-		$path = str_replace( '/' . $current_language . '/' , '/', $path );
+	public function kill_language_slug( $request_uri ) {
+		$path = str_replace( '/' . pll_current_language() . '/' , '/', $request_uri );
 		return $path;
 	}
 }

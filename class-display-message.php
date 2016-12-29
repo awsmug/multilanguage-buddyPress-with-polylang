@@ -81,6 +81,14 @@ class BPPL_Messages {
              */
             do_action( 'bppl_init_message', $message );
         }
+
+        if( count( $this->messages_admin ) > 0 ) {
+            add_action( 'admin_notices', array( $this, 'admin_show' ) );
+        }
+
+        if( count( $this->messages_bp ) > 0 ) {
+            add_action( 'bp_init', array( $this, 'bp_show' ) );
+        }
     }
 
     /**

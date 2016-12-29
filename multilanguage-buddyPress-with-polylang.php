@@ -13,7 +13,7 @@ if( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class BuddyPress_Polylang
+ * Class Multilanguage_BP_Polylang
  *
  * This class contains basic functionality for getting BuddyPress and Polylang together
  */
@@ -41,7 +41,7 @@ class Multilanguage_BP_Polylang {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return BuddyPress_Polylang $instance
+	 * @return Multilanguage_BP_Polylang $instance
 	 */
 	final public static function get_instance() {
 		if ( null === static::$instance ) {
@@ -58,7 +58,14 @@ class Multilanguage_BP_Polylang {
 	protected function init() {
 		if( ! function_exists( 'buddypress' ) ) {
 			// We should output some information fot the user
-			// throw new Exception( __( 'BuddyPress is not loaded', 'buddypress-polylang' ), 1 );
+			throw new Exception( __( 'BuddyPress is not loaded', 'buddypress-polylang' ), 1 );
+            return;
+		}
+
+		if( ! function_exists( 'pll_current_language' ) ) {
+			// We should output some information fot the user
+            throw new Exception( __( 'Polylang is not loaded', 'buddypress-polylang' ), 1 );
+            return;
 		}
 
 		// Including all needed files
@@ -71,7 +78,7 @@ class Multilanguage_BP_Polylang {
 		BP_Translate_Core::get_instance();
 
 		// Translating Emails of BuddyPress
-		BP_Email_Translate::get_instance();
+        BP_Translate_Emails::get_instance();
 	}
 
 	/**
@@ -89,9 +96,9 @@ class Multilanguage_BP_Polylang {
 	 * Include needed files here
 	 */
 	private function includes() {
-		require_once $this->get_path() . '/class-polylang.php';
-		require_once $this->get_path() . '/class-bp-core-translate.php';
-		require_once $this->get_path() . '/class-bp-email-translate.php';
+		require_once self::get_path() . '/class-polylang.php';
+		require_once self::get_path() . '/class-bp-core-translate.php';
+		require_once self::get_path() . '/class-bp-email-translate.php';
 	}
 
 	/**
@@ -132,7 +139,7 @@ function bppl() {
 	return Multilanguage_BP_Polylang::get_instance();
 }
 
-// Get the shit running! :)
-bppl();
+// Get it running! :)
+add_action( 'plugins_loaded', 'bppl' );
 
 

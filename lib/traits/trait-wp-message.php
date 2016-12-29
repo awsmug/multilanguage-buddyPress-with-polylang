@@ -35,7 +35,7 @@ trait BPPL_WP_Messages {
      *
      * @param string $text Text to show
      */
-    public function messages_prefix( $text ) {
+    private function messages_prefix( $text ) {
         $this->messages_prefix = $text;
     }
 

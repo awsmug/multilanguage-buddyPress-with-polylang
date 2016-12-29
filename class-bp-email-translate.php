@@ -84,7 +84,12 @@ class BP_Translate_Emails {
 
 			unload_textdomain( 'buddypress' );
 			load_plugin_textdomain( 'buddypress' );
-			$this->install_emails( $locale );
+			$installed = $this->install_emails( $locale );
+
+			if( is_wp_error( $installed ) ) {
+                bppl()->message( $installed->get_error_message() );
+                break;
+            }
 
 			// And so on...
 		}
@@ -103,12 +108,13 @@ class BP_Translate_Emails {
 	 * @since 1.0.0
 	 *
 	 * @param string $locale
+     * @return WP_Error
 	 */
 	private function install_emails( $locale ) {
 		$lang = bppl()->polylang()->get_lang_by_locale( $locale );
 
 		if( is_wp_error( $lang ) ) {
-			return;
+			return $lang;
 		}
 
 		$defaults = array(

@@ -40,7 +40,7 @@ class BPPL_Messages {
     /**
      * Adds a message
      *
-     * @param string $text
+     * @param string $text Message text
      * @param string $type Possible values 'success', 'error', 'notice'.
      * @param string $where Possible values 'auto', 'admin' and 'frontend'.
      * @param string $capability Needed capability to show message
@@ -122,7 +122,7 @@ class BPPL_Messages {
      */
     private function admin_show() {
         foreach( $this->messages_admin AS $message ) {
-            echo '<div class="' . $message[ 'type' ]. '">' . $message[ 'text' ] . '</div>';
+            echo '<div class="' . $message[ 'type' ]. '"><p>' . $message[ 'text' ] . '</p></div>';
         }
     }
 
@@ -161,7 +161,7 @@ class BPPL_Messages {
 /**
  * Adds a message
  *
- * @param string $text
+ * @param string $text Message text
  * @param string $type Possible values 'success', 'error', 'notice'.
  * @param string $where Possible values 'auto', 'admin' and 'frontend'.
  * @param string $capability Needed capability to show message

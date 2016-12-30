@@ -16,6 +16,7 @@ class BP_Polylang {
 
 	/**
 	 * All languages added by Polylang
+     *
 	 * @var array
 	 */
 	protected $languages = array();

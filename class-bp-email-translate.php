@@ -30,6 +30,13 @@ class BP_Translate_Emails {
 	 */
 	protected $temp_locale = null;
 
+    /**
+     * Post language relationships
+     *
+     * @var array
+     */
+	private $post_lang_rel = array();
+
 	/**
 	 * BuddyPress_Polylang constructor
 	 *
@@ -84,7 +91,12 @@ class BP_Translate_Emails {
 
 			unload_textdomain( 'buddypress' );
 			load_plugin_textdomain( 'buddypress' );
-			$this->install_emails( $locale );
+			$installed = $this->install_emails( $locale );
+
+			if( is_wp_error( $installed ) ) {
+                bppl()->message( $installed->get_error_message() );
+                break;
+            }
 
 			// And so on...
 		}
@@ -93,6 +105,22 @@ class BP_Translate_Emails {
 		// Reset to system language
 		unload_textdomain( 'buddypress' );
 		load_plugin_textdomain( 'buddypress' );
+
+		// Saving relations between posts
+		foreach( $this->post_lang_rel AS $post_lang_rel ) {
+		    $posts = array();
+		    foreach( $post_lang_rel AS $locale => $post_id ) {
+                $lang = bppl()->polylang()->get_lang_by_locale( $locale );
+                if( is_wp_error( $lang ) ) {
+                    bppl()->message( $lang->get_error_message() );
+                    break;
+                }
+
+                $posts[ $lang ] = $post_id;
+            }
+
+            pll_save_post_translations( $posts );
+        }
 	}
 
 	/**
@@ -101,12 +129,13 @@ class BP_Translate_Emails {
 	 * @since 1.0.0
 	 *
 	 * @param string $locale
+     * @return WP_Error
 	 */
 	private function install_emails( $locale ) {
 		$lang = bppl()->polylang()->get_lang_by_locale( $locale );
 
 		if( is_wp_error( $lang ) ) {
-			return;
+			return $lang;
 		}
 
 		$defaults = array(
@@ -124,6 +153,8 @@ class BP_Translate_Emails {
 				continue;
 			}
 			pll_set_post_language( $post_id, $locale );
+
+			$this->post_lang_rel[ $id ][ $locale ] = $post_id;
 
 			$term_id = $id . '-' . $lang;
 

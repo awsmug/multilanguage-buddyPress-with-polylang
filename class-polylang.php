@@ -16,6 +16,7 @@ class BP_Polylang {
 
 	/**
 	 * All languages added by Polylang
+     *
 	 * @var array
 	 */
 	protected $languages = array();
@@ -49,7 +50,7 @@ class BP_Polylang {
 	 * @since 1.0.0
 	 */
 	protected function init() {
-		add_action( 'plugins_loaded', array( $this, 'init_polylang_languages' ) );
+		add_action( 'plugins_loaded', array( $this, 'init_polylang_languages' ), 15 );
 	}
 
 	/**
@@ -65,6 +66,7 @@ class BP_Polylang {
 
 		// Stopping if no languages existing
 		if( is_wp_error( $languages ) ) {
+		    bppl()->message( $languages->get_error_message() );
 			return;
 		}
 
@@ -133,7 +135,7 @@ class BP_Polylang {
 	 *
 	 * @param string $locale Name of the locale
 	 *
-	 * @return array|WP_Error
+	 * @return string|WP_Error
 	 */
 	public function get_lang_by_locale( $locale ) {
 		$lang = $this->get_value_by( 'locale', $locale, 'lang' );

@@ -71,7 +71,7 @@ class Multilanguage_BP_Polylang {
 		BP_Translate_Core::get_instance();
 
 		// Translating Emails of BuddyPress
-		BP_Email_Translate::get_instance();
+        BP_Translate_Emails::get_instance();
 	}
 
 	/**

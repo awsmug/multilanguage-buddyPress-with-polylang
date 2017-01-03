@@ -93,8 +93,6 @@ class BP_Translate_Emails {
 		// Reset to system language
 		unload_textdomain( 'buddypress' );
 		load_plugin_textdomain( 'buddypress' );
-
-		// exit;
 	}
 
 	/**
@@ -157,7 +155,7 @@ class BP_Translate_Emails {
 	 */
 	public function get_rid_of_shit() {
 		$emails = get_posts( array(
-			                     'fields'           => 'ids',
+			                     'fields'           => 'idsBP_Email_Translate',
 			                     'post_status'      => 'publish',
 			                     'post_type'        => bp_get_email_post_type(),
 			                     'posts_per_page'   => -1,

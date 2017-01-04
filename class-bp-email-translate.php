@@ -53,9 +53,13 @@ class BP_Translate_Emails {
 	 */
 	protected function init() {
 		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
-		add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
-		add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
-	}
+
+        add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
+        add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
+
+        add_filter( 'bp_get_email_args', array( $this, 'bp_get_email_args' ), 10, 2 );
+        add_action( 'bp_email_set_to', array( $this, 'bp_email_set_to' ), 10, 5 );
+    }
 
 	/**
 	 * Getting instance
@@ -97,8 +101,6 @@ class BP_Translate_Emails {
                 bppl()->message( $installed->get_error_message() );
                 break;
             }
-
-			// And so on...
 		}
 		remove_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 
@@ -243,9 +245,40 @@ class BP_Translate_Emails {
 		return $post_types;
 	}
 
+    /**
+     * Adding Taxonomies to Polylang translations
+     *
+     * @param $taxonomies
+     *
+     * @return mixed
+     */
 	public function add_taxonomy( $taxonomies ) {
 		$taxonomies[ bp_get_email_tax_type() ] = bp_get_email_tax_type();
 		return $taxonomies;
 	}
+
+    public function bp_get_email_args( $args, $email_type ) {
+	    $languages = bppl()->polylang()->get_languages();
+        $base_term = $args[ 'tax_query' ][ 0 ][ 'terms' ];
+
+        $terms = array();
+        foreach( $languages AS $language ) {
+            $terms[] = $base_term . '-' . $language[ 'lang' ];
+        }
+
+	    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $terms;
+	    return $args;
+    }
+
+    public function bp_email_set_to( $to, $to_address, $name, $operation, $bp_email_object ) {
+        $user_email = $to[ 0 ]->get_address();
+	    $user = get_user_by( 'email', $user_email );
+
+	    $meta = get_user_meta( $user->ID, 'locale' );
+
+	    $pll = pll();
+	    $who = $to;
+        return $to;
+    }
 }
 

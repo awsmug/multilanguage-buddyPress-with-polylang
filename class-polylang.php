@@ -54,7 +54,9 @@ class BP_Polylang {
 	}
 
 	/**
-	 * Initializing an array for the languages
+     * Init Polylang languages
+     *
+	 * Initializing an array for the languages for later use.
 	 *
 	 * @since 1.0.0
 	 */
@@ -81,6 +83,44 @@ class BP_Polylang {
 			);
 		}
 	}
+
+    /**
+     * Setting PLL language cookie
+     *
+     * We are setting and overwriting the cookie every time,
+     * because we can have different users using one.
+     *
+     * @since 1.0.0
+     */
+	public function set_language_cookie() {
+
+    }
+
+    /**
+     * Getting the user locale
+     *
+     * Gets the locale for the user from user settings.
+     *
+     * @since 1.0.0
+     *
+     * @return string $locale WordPress Locale (en_US, de_DE, fr_FR and so on).
+     */
+    public function get_user_locale() {
+
+    }
+
+    /**
+     * Setting the user locale
+     *
+     * Saves the user locale to the user settings
+     *
+     * @since 1.0.0
+     *
+     * @return bool $saved True if everything is saved fine.
+     */
+    public function save_user_locale() {
+        return true;
+    }
 
 	/**
 	 * Getting all available languages

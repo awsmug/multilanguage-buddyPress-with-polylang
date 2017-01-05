@@ -112,7 +112,7 @@ class BP_Translate_Emails {
 		foreach( $this->post_lang_rel AS $post_lang_rel ) {
 		    $posts = array();
 		    foreach( $post_lang_rel AS $locale => $post_id ) {
-                $lang = bppl()->polylang()->get_lang_by_locale( $locale );
+                $lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
                 if( is_wp_error( $lang ) ) {
                     bppl()->message( $lang->get_error_message() );
                     break;
@@ -134,7 +134,7 @@ class BP_Translate_Emails {
      * @return WP_Error
 	 */
 	private function install_emails( $locale ) {
-		$lang = bppl()->polylang()->get_lang_by_locale( $locale );
+		$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
 
 		if( is_wp_error( $lang ) ) {
 			return $lang;

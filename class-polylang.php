@@ -50,7 +50,8 @@ class BP_Polylang {
 	 * @since 1.0.0
 	 */
 	protected function init() {
-		add_action( 'plugins_loaded', array( $this, 'init_polylang_languages' ), 15 );
+        $this->init_polylang_languages();
+        $this->set_language_cookie();
 	}
 
 	/**
@@ -61,13 +62,17 @@ class BP_Polylang {
 	 * @since 1.0.0
 	 */
 	public function init_polylang_languages(){
-		$languages = get_terms( array(
-			                        'taxonomy' => 'language',
-			                        'hide_empty' => false,
-		                        ) );
+	    global $wpdb;
+
+        /**
+         * We have to work with our own SQL statements, because Polylang loads everything
+         * at the plugins_loaded hook with priority 1. No chance to get in after taxonomies
+         * loaded and to do anything like setting cookie and anything else on the Polylang start.
+         */
+        $languages = $wpdb->get_results( "SELECT * FROM {$wpdb->terms} AS t, {$wpdb->term_taxonomy} AS tt WHERE t.term_id = tt.term_id AND taxonomy = 'language'" );
 
 		// Stopping if no languages existing
-		if( is_wp_error( $languages ) ) {
+		if( null === ( $languages ) ) {
 		    bppl()->message( $languages->get_error_message() );
 			return;
 		}
@@ -76,10 +81,10 @@ class BP_Polylang {
 			$description = maybe_unserialize( $language->description );
 
 			$this->languages[ $language->slug ] = array(
+				'term_id' => $language->term_id,
 				'name' => $language->name,
 				'lang'  => $language->slug,
 				'locale' => $description[ 'locale' ],
-				'term_id' => $language->term_id,
 			);
 		}
 	}
@@ -87,13 +92,30 @@ class BP_Polylang {
     /**
      * Setting PLL language cookie
      *
-     * We are setting and overwriting the cookie every time,
+     * We are setting and overwriting the cookie every time from DB,
      * because we can have different users using one.
      *
      * @since 1.0.0
      */
 	public function set_language_cookie() {
+        if( ! function_exists('wp_get_current_user') ) {
+            require_once ABSPATH . 'wp-includes/pluggable.php';
+        }
+	    $user = wp_get_current_user();
 
+	    // If we have no user, we do not set anything
+	    if( 0 === $user->ID ) {
+	        return;
+        }
+
+	    $lang_slug = $this->get_lang_slug_by_locale( $user->locale );
+
+	    if( is_wp_error( $lang_slug ) ) {
+	        bppl()->message( $lang_slug->get_error_message() );
+	        return;
+        }
+
+        setcookie( 'pll_language', $lang_slug );
     }
 
     /**
@@ -103,10 +125,18 @@ class BP_Polylang {
      *
      * @since 1.0.0
      *
-     * @return string $locale WordPress Locale (en_US, de_DE, fr_FR and so on).
+     * @param int $user_id WordPress user ID
+     *
+     * @return string|false $locale WordPress Locale (en_US, de_DE, fr_FR and so on). False if user was not found.
      */
-    public function get_user_locale() {
+    public function get_user_locale( $user_id ) {
+        $user = get_userdata( $user_id );
 
+        if( ! $user ) {
+            return false;
+        }
+
+        return $user->locale;
     }
 
     /**
@@ -116,7 +146,7 @@ class BP_Polylang {
      *
      * @since 1.0.0
      *
-     * @return bool $saved True if everything is saved fine.
+     * @return bool|WP_Error $saved True if everything is saved fine or WP_Error on failure.
      */
     public function save_user_locale() {
         return true;
@@ -130,10 +160,6 @@ class BP_Polylang {
 	 * @return array|WP_Error $languages All language information in an array
 	 */
 	public function get_languages() {
-		if( ! did_action( 'plugins_loaded' ) ) {
-			return new WP_Error( 'actionhook_not_passed', __( 'Actionhook "plugins_loaded" not passed. Please try at a later moment.', 'multilanguage-buddypress-with-polylang' ) );
-		}
-
 		return $this->languages;
 	}
 
@@ -177,7 +203,7 @@ class BP_Polylang {
 	 *
 	 * @return string|WP_Error
 	 */
-	public function get_lang_by_locale( $locale ) {
+	public function get_lang_slug_by_locale( $locale ) {
 		$lang = $this->get_value_by( 'locale', $locale, 'lang' );
 		return $lang;
 	}

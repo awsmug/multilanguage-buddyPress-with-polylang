@@ -29,14 +29,14 @@ class Multilanguage_BP_Polylang {
 	 *
 	 * @var Multilanguage_BP_Polylang $instance;
 	 */
-	protected static $instance;
+	protected static $instance = null;
 
 	/**
 	 * BuddyPress_Polylang constructor
 	 *
 	 * @since 1.0.0
 	 */
-	final private function __construct() {
+	private function __construct() {
 		$this->init();
 	}
 
@@ -47,9 +47,9 @@ class Multilanguage_BP_Polylang {
 	 *
 	 * @return Multilanguage_BP_Polylang $instance
 	 */
-	final public static function get_instance() {
+	public static function get_instance() {
 		if ( null === static::$instance ) {
-			static::$instance = new static;
+            static::$instance = new static;
 		}
 		return static::$instance;
 	}
@@ -59,24 +59,14 @@ class Multilanguage_BP_Polylang {
 	 *
 	 * @since 1.0.0
 	 */
-	protected function init() {
+	private function init() {
 	    $this->messages_init();
 	    $this->messages_prefix( __( 'Multilanguage BuddyPress with Polylang: ', 'buddypress-polylang' ) );
 
-		if( ! function_exists( 'buddypress' ) ) {
-			// We should output some information fot the user
-            $this->message( __( 'BuddyPress is not loaded. Please install and activate BuddyPress.', 'buddypress-polylang' ) );
-            return;
-		}
-
-		if( ! function_exists( 'pll_current_language' ) ) {
-			// We should output some information fot the user
-            $this->message( __( 'Polylang is not loaded. Please install and activate Polylang.', 'buddypress-polylang' ) );
-            return;
-		}
-
 		// Including all needed files
 		$this->includes();
+
+		add_action( 'plugins_loaded', array( $this, 'do_checks' ) );
 
 		// Getting some base information from Polylang (because used later)
 		BP_Polylang::get_instance();
@@ -87,6 +77,18 @@ class Multilanguage_BP_Polylang {
 		// Translating Emails of BuddyPress
         BP_Translate_Emails::get_instance();
 	}
+
+	public function do_checks() {
+        if( ! function_exists( 'buddypress' ) ) {
+            // We should output some information fot the user
+            $this->message( __( 'BuddyPress is not loaded. Please install and activate BuddyPress.', 'buddypress-polylang' ) );
+        }
+
+        if( ! function_exists( 'pll_current_language' ) ) {
+            // We should output some information fot the user
+            $this->message( __( 'Polylang is not loaded. Please install and activate Polylang.', 'buddypress-polylang' ) );
+        }
+    }
 
 	/**
 	 * Polylang Object
@@ -146,7 +148,9 @@ function bppl() {
 	return Multilanguage_BP_Polylang::get_instance();
 }
 
-// Get it running! :)
-add_action( 'plugins_loaded', 'bppl' );
+bppl();
+
+// Get it running! Have to be loaded at Zero, because Polylang is a bit too fast. :)
+// add_action( 'plugins_loaded', 'bppl', 1 );
 
 

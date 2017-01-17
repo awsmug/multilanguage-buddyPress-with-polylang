@@ -18,6 +18,8 @@ class BPPL_Loader {
 
 	/**
 	 * Check if everything is running in WP
+	 *
+	 * @since 1.0.0
 	 */
 	public static function do_checks() {
 		if ( ! function_exists( 'buddypress' ) ) {
@@ -33,6 +35,8 @@ class BPPL_Loader {
 
 	/**
 	 * Include needed files here
+	 *
+	 * @since 1.0.0
 	 */
 	private static function includes() {
 		require_once dirname( __FILE__ ) . '/lib/class-messages.php';

@@ -3,21 +3,37 @@
 class BPPL_Manager{
 
 	/**
+	 * Plugin object holder
+	 *
+	 * @since 1.0.0
+	 *
 	 * @var BPPL_Loader
 	 */
 	private $plugin = null;
 
 	/**
+	 * Polylang object holder
+	 *
+	 * @since 1.0.0
+	 *
 	 * @var BPPL_Polylang
 	 */
 	private $polylang = null;
 
 	/**
+	 * BuddyPress object holder
+	 *
+	 * @since 1.0.0
+	 *
 	 * @var BPPL_BuddyPress
 	 */
 	private $buddypress = null;
 
 	/**
+	 * Email object holder
+	 *
+	 * @since 1.0.0
+	 *
 	 * @var BPPL_BuddyPress_Emails
 	 */
 	private $buddypress_emails = null;

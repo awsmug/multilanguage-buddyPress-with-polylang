@@ -51,6 +51,8 @@ class BPPL_Messages {
     /**
      * BPPL_Messages constructor.
      *
+     * @since 1.0.0
+     *
      * Running Actionhooks.
      */
     private function __construct(){
@@ -60,6 +62,8 @@ class BPPL_Messages {
     /**
      * Adds a prefix text to all messages
      *
+     * @since 1.0.0
+     *
      * @param string $text Text to show
      */
     public function prefix( $text ) {
@@ -68,6 +72,8 @@ class BPPL_Messages {
 
     /**
      * Adds a message
+     *
+     * @since 1.0.0
      *
      * @param string $text Message text
      * @param string $type Possible values 'success', 'error', 'notice'.
@@ -87,6 +93,8 @@ class BPPL_Messages {
 
     /**
      * Showing admin messages
+     *
+     * @since 1.0.0
      */
     public function admin_show_messages() {
 

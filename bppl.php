@@ -19,6 +19,8 @@ require dirname( __FILE__ ) . '/class-loader.php';
 /**
  * Message function
  *
+ * @since 1.0.0
+ *
  * @return BPPL_Messages
  */
 function bppl_messages() {
@@ -32,6 +34,8 @@ BPPL_Loader::init();
 
 /**
  * Plugin Superfunction
+ *
+ * @since 1.0.0
  *
  * @return BPPL_Manager
  */

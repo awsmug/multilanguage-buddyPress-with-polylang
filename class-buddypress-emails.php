@@ -8,6 +8,9 @@ class BPPL_BuddyPress_Emails {
 
 	/**
 	 * All languages added by Polylang
+	 *
+	 * @since 1.0.0
+	 *
 	 * @var array
 	 */
 	protected $languages = array();
@@ -23,6 +26,8 @@ class BPPL_BuddyPress_Emails {
 
     /**
      * Post language relationships
+     *
+     * @since 1.0.0
      *
      * @var array
      */
@@ -215,6 +220,8 @@ class BPPL_BuddyPress_Emails {
 
     /**
      * Adding Taxonomies to Polylang translations
+     *
+     * @since 1.0.0
      *
      * @param $taxonomies
      *

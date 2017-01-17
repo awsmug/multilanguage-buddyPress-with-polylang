@@ -7,6 +7,8 @@ if( ! defined( 'ABSPATH' ) ) {
 class BPPL_Polylang {
 	/**
 	 * All languages added by Polylang
+	 *
+	 * @since 1.0.0
      *
 	 * @var array
 	 */

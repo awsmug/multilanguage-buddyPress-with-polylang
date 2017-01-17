@@ -79,7 +79,7 @@ class BPPL_Polylang {
 	    $lang_slug = $this->get_lang_slug_by_locale( $user->locale );
 
 	    if( is_wp_error( $lang_slug ) ) {
-	        bppl()->message( $lang_slug->get_error_message() );
+		    bppl_messages()->add( $lang_slug->get_error_message() );
 	        return;
         }
 
@@ -159,7 +159,7 @@ class BPPL_Polylang {
 			}
 		}
 
-		return new WP_Error( 'not_found', __( 'Not found.', 'multilanguage-buddypress-with-polylang' ) );
+		return new WP_Error( 'not_found', __( 'Value Not found.', 'multilanguage-buddypress-with-polylang' ) );
 	}
 
 	/**

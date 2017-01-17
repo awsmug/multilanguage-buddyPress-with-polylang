@@ -22,12 +22,12 @@ class BPPL_Loader {
 	public static function do_checks() {
 		if ( ! function_exists( 'buddypress' ) ) {
 			// We should output some information fot the user
-			bppl()->messages()->add( __( 'BuddyPress is not loaded. Please install and activate BuddyPress.', 'buddypress-polylang' ) );
+			bppl_messages()->add( __( 'BuddyPress is not loaded. Please install and activate BuddyPress.', 'buddypress-polylang' ) );
 		}
 
 		if ( ! function_exists( 'pll_current_language' ) ) {
 			// We should output some information fot the user
-			bppl()->messages()->add( __( 'Polylang is not loaded. Please install and activate Polylang.', 'buddypress-polylang' ) );
+			bppl_messages()->add( __( 'Polylang is not loaded. Please install and activate Polylang.', 'buddypress-polylang' ) );
 		}
 	}
 

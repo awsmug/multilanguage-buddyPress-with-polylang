@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class BPPL_Messages
  *
@@ -7,8 +6,19 @@
  */
 class BPPL_Messages {
 
+	/**
+	 * Instance
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var BPPL_Messages $instance ;
+	 */
+	protected static $instance = null;
+
     /**
      * All added messages
+     *
+     * @since 1.0.0
      *
      * @var array
      */
@@ -17,16 +27,33 @@ class BPPL_Messages {
     /**
      * Prefix for messages
      *
+     * @since 1.0.0
+     *
      * @var string
      */
     private $messages_prefix = null;
+
+	/**
+	 * Getting instance
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return BPPL_Messages $instance
+	 */
+	public static function get_instance() {
+		if ( null === static::$instance ) {
+			static::$instance = new static;
+		}
+
+		return static::$instance;
+	}
 
     /**
      * BPPL_Messages constructor.
      *
      * Running Actionhooks.
      */
-    public function __construct(){
+    private function __construct(){
         add_action( 'admin_notices', array( $this, 'admin_show_messages' ) );
     }
 

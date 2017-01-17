@@ -12,6 +12,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require dirname( __FILE__ ) . '/lib/class-messages.php';
+
+/**
+ * Message function
+ *
+ * @return BPPL_Messages
+ */
+function bppl_messages() {
+	$messages = BPPL_Messages::get_instance();
+	$messages->prefix( 'BuddyPress Polylang: ' );
+	return $messages;
+}
+
+// Loading plugin
 require dirname( __FILE__ ) . '/class-loader.php';
 BPPL_Loader::init();
 
@@ -23,5 +37,4 @@ BPPL_Loader::init();
 function bppl(){
 	return BPPL_Manager::get_instance();
 }
-
 bppl();

@@ -4,16 +4,7 @@ if( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class BP_Polylang {
-	/**
-	 * Instance
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var BP_Polylang $instance;
-	 */
-	protected static $instance;
-
+class BPPL_Polylang {
 	/**
 	 * All languages added by Polylang
      *
@@ -22,34 +13,11 @@ class BP_Polylang {
 	protected $languages = array();
 
 	/**
-	 * BuddyPress_Polylang constructor
-	 *
-	 * @since 1.0.0
-	 */
-	final private function __construct() {
-		$this->init();
-	}
-
-	/**
-	 * Getting instance
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return BP_Polylang $instance
-	 */
-	final public static function get_instance() {
-		if ( null === static::$instance ) {
-			static::$instance = new static;
-		}
-		return static::$instance;
-	}
-
-	/**
 	 * Adding Actionhooks & Co.
 	 *
 	 * @since 1.0.0
 	 */
-	protected function init() {
+	public function __construct() {
         $this->init_polylang_languages();
         $this->set_language_cookie();
 	}
@@ -73,7 +41,7 @@ class BP_Polylang {
 
 		// Stopping if no languages existing
 		if( null === ( $languages ) ) {
-		    bppl()->message( $languages->get_error_message() );
+			// bppl()->message( $languages->get_error_message() );
 			return;
 		}
 

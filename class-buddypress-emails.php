@@ -4,16 +4,7 @@ if( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class BP_Translate_Emails {
-
-	/**
-	 * Instance
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var BP_Translate_Emails $instance;
-	 */
-	protected static $instance;
+class BPPL_BuddyPress_Emails {
 
 	/**
 	 * All languages added by Polylang
@@ -42,16 +33,7 @@ class BP_Translate_Emails {
 	 *
 	 * @since 1.0.0
 	 */
-	final private function __construct() {
-		$this->init();
-	}
-
-	/**
-	 * Adding Actionhooks & Co.
-	 *
-	 * @since 1.0.0
-	 */
-	protected function init() {
+	final public function __construct() {
 		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
 
         add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
@@ -60,20 +42,6 @@ class BP_Translate_Emails {
         add_filter( 'bp_get_email_args', array( $this, 'bp_get_email_args' ), 10, 2 );
         add_action( 'bp_email_set_to', array( $this, 'bp_email_set_to' ), 10, 5 );
     }
-
-	/**
-	 * Getting instance
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return BP_Translate_Emails $instance
-	 */
-	final public static function get_instance() {
-		if ( null === static::$instance ) {
-			static::$instance = new static;
-		}
-		return static::$instance;
-	}
 
 	/**
 	 * Installing all emails of the Polylang added languages

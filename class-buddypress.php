@@ -11,16 +11,7 @@ if( ! defined( 'ABSPATH' ) ) {
  *
  * This class contains basic functionality for getting BuddyPress and Polylang together
  */
-class BP_Translate_Core {
-	/**
-	 * Instance
-	 *
-	 * @since 1.0.0
-	 *
-	 * @var BP_Translate_Core $instance;
-	 */
-	protected static $instance;
-
+class BPPL_BuddyPress {
 	/**
 	 * Detected Locale (from Polylang settings)
 	 *
@@ -35,34 +26,7 @@ class BP_Translate_Core {
 	 *
 	 * @since 1.0.0
 	 */
-	final private function __construct() {
-		$this->init();
-	}
-
-	/**
-	 * Getting instance
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return BP_Translate_Core $instance
-	 */
-	final public static function get_instance() {
-		if ( null === static::$instance ) {
-			static::$instance = new static;
-		}
-		return static::$instance;
-	}
-
-	/**
-	 * Adding Actionhooks & Co.
-	 *
-	 * @since 1.0.0
-	 */
-	protected function init() {
-		if( ! function_exists( 'buddypress' ) ) {
-			// throw new Exception( __( 'BuddyPress is not loaded', 'buddypress-polylang' ), 1 );
-		}
-
+	final public function __construct() {
 		// We do not need the following functionality in the admin
 		if( is_admin() ) {
 			return;

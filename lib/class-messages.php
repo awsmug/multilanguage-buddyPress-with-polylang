@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Trait BPPL_Messages
+ * Class BPPL_Messages
  *
  * Adding messages to WP/BP for informing user.
  */
-trait BPPL_WP_Messages {
+class BPPL_Messages {
 
     /**
      * All added messages
@@ -26,7 +26,7 @@ trait BPPL_WP_Messages {
      *
      * Running Actionhooks.
      */
-    public function messages_init(){
+    public function __construct(){
         add_action( 'admin_notices', array( $this, 'admin_show_messages' ) );
     }
 
@@ -35,7 +35,7 @@ trait BPPL_WP_Messages {
      *
      * @param string $text Text to show
      */
-    private function messages_prefix( $text ) {
+    public function prefix( $text ) {
         $this->messages_prefix = $text;
     }
 
@@ -49,7 +49,7 @@ trait BPPL_WP_Messages {
      *
      * @return bool
      */
-    public function message( $text, $type = 'error', $where = 'auto', $capability = 'none' ) {
+    public function add( $text, $type = 'error', $where = 'auto', $capability = 'none' ) {
         $this->messages[] = array (
             'text' => $text,
             'type' => $type,

@@ -27,7 +27,7 @@ function bppl_messages() {
 	return $messages;
 }
 
-// Loading plugin
+// Loading includes and doing checks
 BPPL_Loader::init();
 
 /**
@@ -38,4 +38,6 @@ BPPL_Loader::init();
 function bppl(){
 	return BPPL_Manager::get_instance();
 }
+
+// Getting it running!
 bppl();

@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require dirname( __FILE__ ) . '/lib/class-messages.php';
+require dirname( __FILE__ ) . '/class-loader.php';
+
 
 /**
  * Message function
@@ -26,7 +28,6 @@ function bppl_messages() {
 }
 
 // Loading plugin
-require dirname( __FILE__ ) . '/class-loader.php';
 BPPL_Loader::init();
 
 /**

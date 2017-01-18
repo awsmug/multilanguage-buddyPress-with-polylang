@@ -84,4 +84,15 @@ class BPPL_Manager{
 
 		return static::$instance;
 	}
+
+	/**
+	 * Polylang object
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return BPPL_Polylang
+	 */
+	public function polylang() {
+		return $this->polylang;
+	}
 }

@@ -22,13 +22,25 @@ class BPPL_Polylang {
 	protected $languages = array();
 
 	/**
+	 * Language of user
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var string|null
+	 */
+	protected $user_lang = null;
+
+	/**
 	 * Adding Actionhooks & Co.
 	 *
 	 * @since 1.0.0
 	 */
 	public function __construct() {
         $this->init_polylang_languages();
+        $this->init_user_language();
+
         $this->set_language_cookie();
+        add_action( 'pll_language_defined', array( $this, 'save_user_locale' ), 10, 2 );
 	}
 
 	/**
@@ -74,7 +86,7 @@ class BPPL_Polylang {
      *
      * @since 1.0.0
      */
-	private function set_language_cookie() {
+	private function init_user_language() {
         if( ! function_exists( 'wp_get_current_user' ) ) {
             require_once ABSPATH . 'wp-includes/pluggable.php';
         }
@@ -87,7 +99,7 @@ class BPPL_Polylang {
 
 		$lang_slug = $this->get_default_lang();
 
-        if ( property_exists( $user, 'locale ') ) {
+        if ( ! empty( $user->locale ) ) {
 	        $lang_slug = $this->get_lang_slug_by_locale( $user->locale );
         }
 
@@ -96,7 +108,18 @@ class BPPL_Polylang {
 	        return;
         }
 
-        setcookie( 'pll_language', $lang_slug );
+        $this->user_lang = $lang_slug;
+    }
+
+	/**
+	 * Setting up language cookie of Polylang
+	 *
+	 * @since 1.0.0
+	 */
+    private function set_language_cookie() {
+	    if( ! setcookie( 'pll_language', $this->user_lang ) ) {
+	    	bppl_messages()->add( __( 'Could not set language cookie for Polylang', 'buddypress-polylang' ) );
+	    }
     }
 
 	/**
@@ -139,37 +162,26 @@ class BPPL_Polylang {
     }
 
     /**
-     * Getting the user locale
-     *
-     * Gets the locale for the user from user settings.
-     *
-     * @since 1.0.0
-     *
-     * @param int $user_id WordPress user ID
-     *
-     * @return string|false $locale WordPress Locale (en_US, de_DE, fr_FR and so on). False if user was not found.
-     */
-    public function get_user_locale( $user_id ) {
-        $user = get_userdata( $user_id );
-
-        if( ! $user ) {
-            return false;
-        }
-
-        return $user->locale;
-    }
-
-    /**
      * Setting the user locale
      *
      * Saves the user locale to the user settings
      *
      * @since 1.0.0
      *
+     * @param string $lang_slug Language slug
+     * @param PLL_Language $current_lang Language object
+     *
      * @return bool|WP_Error $saved True if everything is saved fine or WP_Error on failure.
      */
-    public function save_user_locale() {
-        return true;
+    public function save_user_locale( $lang_slug, $current_lang ) {
+	    $user = wp_get_current_user();
+
+	    // We do not save if the user has not logged in or he is in wp-admin
+	    if( 0 === $user->ID || is_admin() ) {
+		    return;
+	    }
+
+	    wp_update_user( array( 'ID' => $user->ID, 'locale' => $current_lang->locale ) );
     }
 
 	/**

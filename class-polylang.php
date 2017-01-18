@@ -74,8 +74,8 @@ class BPPL_Polylang {
      *
      * @since 1.0.0
      */
-	public function set_language_cookie() {
-        if( ! function_exists('wp_get_current_user') ) {
+	private function set_language_cookie() {
+        if( ! function_exists( 'wp_get_current_user' ) ) {
             require_once ABSPATH . 'wp-includes/pluggable.php';
         }
 	    $user = wp_get_current_user();
@@ -85,7 +85,11 @@ class BPPL_Polylang {
 	        return;
         }
 
-	    $lang_slug = $this->get_lang_slug_by_locale( $user->locale );
+		$lang_slug = $this->get_default_lang();
+
+        if ( property_exists( $user, 'locale ') ) {
+	        $lang_slug = $this->get_lang_slug_by_locale( $user->locale );
+        }
 
 	    if( is_wp_error( $lang_slug ) ) {
 		    bppl_messages()->add( $lang_slug->get_error_message() );
@@ -93,6 +97,45 @@ class BPPL_Polylang {
         }
 
         setcookie( 'pll_language', $lang_slug );
+    }
+
+	/**
+	 * Getting default language of Polylang
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+    public function get_default_lang() {
+    	$default_lang = $this->get_option( 'default_lang' );
+
+	    /**
+	     * Filter for default language
+	     *
+	     * @since 1.0.0
+	     *
+	     * @param string $default_language The requested field for the default language
+	     */
+		return apply_filters( 'bppl_default_language', $default_lang );
+    }
+
+	/**
+	 * Getting global polylang options
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $option_name Name of the Polylang option
+	 *
+	 * @return bool|string
+	 */
+    public function get_option( $option_name ) {
+    	$options = maybe_unserialize( get_option( 'polylang' ) );
+
+    	if( ! array_key_exists( $option_name, $options ) ) {
+    		return false;
+	    }
+
+    	return $options[ $option_name ];
     }
 
     /**

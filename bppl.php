@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Multilanguage BuddyPress with Polylang
+ * Plugin Name: BuddyPress Polylang
  * Plugin URI:  http://awesome.ug
  * Description: Getting BuddyPress and polylang together. Early first trying out version.
  * Author:      Awsome UG

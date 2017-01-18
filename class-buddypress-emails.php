@@ -248,6 +248,7 @@ class BPPL_BuddyPress_Emails {
             $terms[] = $base_term . '-' . $language[ 'lang' ];
         }
 
+	    $args[ 'numberposts' ] = -1;
 	    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $terms;
 	    return $args;
     }

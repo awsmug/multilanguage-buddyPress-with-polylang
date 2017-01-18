@@ -28,7 +28,7 @@ class BPPL_Polylang {
 	 *
 	 * @var string|null
 	 */
-	protected $user_lang = null;
+	protected $current_user_lang = null;
 
 	/**
 	 * Adding Actionhooks & Co.
@@ -37,7 +37,7 @@ class BPPL_Polylang {
 	 */
 	public function __construct() {
         $this->init_polylang_languages();
-        $this->init_user_language();
+        $this->init_current_user_language();
 
         $this->set_language_cookie();
         add_action( 'pll_language_defined', array( $this, 'save_user_locale' ), 10, 2 );
@@ -86,7 +86,7 @@ class BPPL_Polylang {
      *
      * @since 1.0.0
      */
-	private function init_user_language() {
+	private function init_current_user_language() {
         if( ! function_exists( 'wp_get_current_user' ) ) {
             require_once ABSPATH . 'wp-includes/pluggable.php';
         }
@@ -108,7 +108,7 @@ class BPPL_Polylang {
 	        return;
         }
 
-        $this->user_lang = $lang_slug;
+        $this->current_user_lang = $lang_slug;
     }
 
 	/**
@@ -117,7 +117,7 @@ class BPPL_Polylang {
 	 * @since 1.0.0
 	 */
     private function set_language_cookie() {
-	    if( ! setcookie( 'pll_language', $this->user_lang ) ) {
+	    if( ! setcookie( 'pll_language', $this->current_user_lang ) ) {
 	    	bppl_messages()->add( __( 'Could not set language cookie for Polylang', 'buddypress-polylang' ) );
 	    }
     }
@@ -182,6 +182,15 @@ class BPPL_Polylang {
 	    }
 
 	    wp_update_user( array( 'ID' => $user->ID, 'locale' => $current_lang->locale ) );
+    }
+
+	/**
+	 * Returns current user language
+	 *
+	 * @since 1.0.0
+	 */
+    public function get_current_user_lang() {
+		return $this->current_user_lang;
     }
 
 	/**

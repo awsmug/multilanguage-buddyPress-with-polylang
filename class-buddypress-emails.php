@@ -67,7 +67,7 @@ class BPPL_BuddyPress_Emails {
 		$locales = pll_languages_list( array( 'fields' => 'locale' ) );
 
 		// Deleting everything created before
-		$this->get_rid_of_shit();
+		$this->delete_emails();
 
 		add_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 		foreach( $locales AS $locale ) {
@@ -166,7 +166,7 @@ class BPPL_BuddyPress_Emails {
 	 *
 	 * @since 1.0.0
 	 */
-	public function get_rid_of_shit() {
+	public function delete_emails() {
 		$emails = get_posts( array(
 			                     'fields'           => 'idsBP_Email_Translate',
 			                     'post_status'      => 'publish',

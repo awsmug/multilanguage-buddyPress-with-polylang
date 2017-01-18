@@ -1,4 +1,11 @@
 <?php
+/**
+ * Class BPPL_Polylang
+ *
+ * @since 1.0.0
+ *
+ * This class managaes all needed Polylang functionality for translating BuddyPress
+ */
 
 if( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -42,8 +49,8 @@ class BPPL_Polylang {
         $languages = $wpdb->get_results( "SELECT * FROM {$wpdb->terms} AS t, {$wpdb->term_taxonomy} AS tt WHERE t.term_id = tt.term_id AND taxonomy = 'language'" );
 
 		// Stopping if no languages existing
-		if( null === ( $languages ) ) {
-			// bppl()->message( $languages->get_error_message() );
+		if( null === $languages ) {
+			bppl_messages()->add( $languages->get_error_message() );
 			return;
 		}
 
@@ -152,7 +159,7 @@ class BPPL_Polylang {
 		}
 
 		if( count( $languages ) === 0 ) {
-			return new WP_Error( 'languages_not_existing', __( 'There are no languages added in Polylang yet.', 'multilanguage-buddypress-with-polylang' ) );
+			return new WP_Error( 'languages_not_existing', __( 'There are no languages added in Polylang yet.', 'buddypress-polylang' ) );
 		}
 
 		foreach( $languages AS $language ) {
@@ -161,7 +168,7 @@ class BPPL_Polylang {
 			}
 		}
 
-		return new WP_Error( 'not_found', __( 'Value Not found.', 'multilanguage-buddypress-with-polylang' ) );
+		return new WP_Error( 'not_found', __( 'Value Not found.', 'buddypress-polylang' ) );
 	}
 
 	/**

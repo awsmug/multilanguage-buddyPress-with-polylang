@@ -1,10 +1,16 @@
 <?php
-
 /**
- * Class Multilanguage_BP_Polylang
+ * Class BPPL_Loader
  *
- * This class contains basic functionality for getting BuddyPress and Polylang together
+ * @since 1.0.0
+ *
+ * This class contains includes all necessary files and checks the WordPress installation for needed settings
  */
+
+if( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 class BPPL_Loader {
 	/**
 	 * Adding Actionhooks & Co.

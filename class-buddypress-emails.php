@@ -1,4 +1,11 @@
 <?php
+/**
+ * Class BuddyPress_Polylang_Emails
+ *
+ * @since 1.0.0
+ *
+ * This class contains the functionalities to install and send out emails in the correct language
+ */
 
 if( ! defined( 'ABSPATH' ) ) {
 	exit;

@@ -1,16 +1,16 @@
 <?php
+/**
+ * Class BPPL_BuddyPress
+ *
+ * @since 1.0.0
+ *
+ * This class managaes all needed BuddyPress functionality for translations
+ */
 
 if( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class BuddyPress_Polylang
- *
- * @since 1.0.0
- *
- * This class contains basic functionality for getting BuddyPress and Polylang together
- */
 class BPPL_BuddyPress {
 	/**
 	 * Detected Locale (from Polylang settings)

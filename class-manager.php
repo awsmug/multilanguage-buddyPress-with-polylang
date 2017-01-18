@@ -1,4 +1,15 @@
 <?php
+/**
+ * Class BPPL_Manager
+ *
+ * @since 1.0.0
+ *
+ * This class manages the objects which have to be started for plugin functionality
+ */
+
+if( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class BPPL_Manager{
 

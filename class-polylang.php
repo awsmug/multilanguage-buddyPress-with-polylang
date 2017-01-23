@@ -78,6 +78,41 @@ class BPPL_Polylang {
 		}
 	}
 
+	/**
+	 * Get WordPress logged in cookie name
+	 *
+	 * This is used because we get in trouble with including userfunctions on Multisite
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string $logged_in_cookie The name of the cookie
+	 */
+	private function get_logged_in_cookie_name(){
+		$siteurl = get_site_option( 'siteurl' );
+		$cookie_hash = md5( $siteurl );
+		$logged_in_cookie = 'wordpress_logged_in_' . $cookie_hash;
+
+		return $logged_in_cookie;
+	}
+
+
+	/**
+	 * Getting logged in User
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return false|stdClass The User as object or false if nothing was found
+	 */
+	private function get_logged_in_user() {
+		$cookie_content = $_COOKIE[ $this->get_logged_in_cookie_name() ];
+		$cookie_content = explode( '|', $cookie_content );
+
+		$user = WP_User::get_data_by( 'login', $cookie_content[ 0 ] );
+
+		return $user;
+	}
+
+
     /**
      * Setting PLL language cookie
      *
@@ -87,10 +122,7 @@ class BPPL_Polylang {
      * @since 1.0.0
      */
 	private function init_current_user_language() {
-        if( ! function_exists( 'wp_get_current_user' ) ) {
-            require_once ABSPATH . 'wp-includes/pluggable.php';
-        }
-	    $user = wp_get_current_user();
+	    $user = $this->get_logged_in_user();
 
 	    // If we have no user, we do not set anything
 	    if( 0 === $user->ID ) {

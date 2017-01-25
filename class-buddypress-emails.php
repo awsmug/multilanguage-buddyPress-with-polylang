@@ -258,12 +258,14 @@ class BPPL_BuddyPress_Emails {
 	 */
 	public function bp_get_recipient( &$email, $email_type ) {
 		$user_email = $email->get_to();
+		$user_email = $user_email[ 0 ]->get_address();
 		$user = get_user_by( 'email', $user_email );
 
 		$this->current_recipient = $user;
 
 		// Setting up Email again
 		$email = bp_get_email( $email_type );
+		return;
 	}
 
 	/**
@@ -276,6 +278,10 @@ class BPPL_BuddyPress_Emails {
 	 * @return array $args Filtered query arguments
 	 */
     public function bp_set_email_args( $args ) {
+    	if ( is_wp_error( $args ) ) {
+    		return $args;
+	    }
+
 	    // If no recipient is set, just ask for all languages
 	    if( ! isset( $this->current_recipient ) ) {
 		    $languages = bppl()->polylang()->get_languages();
@@ -294,12 +300,12 @@ class BPPL_BuddyPress_Emails {
 	    }
 
 	    // Getting correct language
-	    $locale = get_user_meta( $this->current_recipient->ID, 'locale' );
+	    $locale = get_user_meta( $this->current_recipient->ID, 'locale', true );
 	    $lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
 
-	    $args_filtered[ 'tax_query' ][ 0 ][ 'terms' ] = $args[ 'tax_query' ][ 0 ][ 'terms' ] . '-' . $lang;
+	    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $args[ 'tax_query' ][ 0 ][ 'terms' ] . '-' . $lang;
 
-	    return $args_filtered;
+	    return $args;
     }
 }
 

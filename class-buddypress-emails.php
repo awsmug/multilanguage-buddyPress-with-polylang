@@ -78,20 +78,20 @@ class BPPL_BuddyPress_Emails {
 		// Deleting everything created before
 		$this->delete_emails();
 
-		add_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 		foreach( $locales AS $locale ) {
 			$this->temp_locale = $locale;
 
+			add_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
 			unload_textdomain( 'buddypress' );
 			load_plugin_textdomain( 'buddypress' );
 			$installed = $this->install_emails( $locale );
 
 			if( is_wp_error( $installed ) ) {
-                bppl()->message( $installed->get_error_message() );
+                bppl_messages()->add( $installed->get_error_message() );
                 break;
             }
+			remove_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 		}
-		remove_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 
 		// Reset to system language
 		unload_textdomain( 'buddypress' );
@@ -120,7 +120,7 @@ class BPPL_BuddyPress_Emails {
 	 * @since 1.0.0
 	 *
 	 * @param string $locale
-     * @return WP_Error
+     * @return boolean|WP_Error
 	 */
 	private function install_emails( $locale ) {
 		$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
@@ -168,6 +168,8 @@ class BPPL_BuddyPress_Emails {
 		 * @since 2.5.0
 		 */
 		do_action( 'bp_core_install_emails' );
+
+		return true;
 	}
 
 	/**

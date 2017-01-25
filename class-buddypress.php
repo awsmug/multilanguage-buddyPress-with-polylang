@@ -32,14 +32,16 @@ class BPPL_BuddyPress {
 			return;
 		}
 
-		// Overwriting BP URL without language slug, becaus it don't understands the URL
-		add_filter( 'bp_uri', array( $this, 'kill_language_slug' ), 0 );
+		// Adding and removing language slug to url
+		add_filter( 'bp_uri', array( $this, 'remove_language_slug' ), 0 );
+		add_filter( 'bp_core_get_root_domain', array( $this, 'add_language_slug' ) );
 
 		// Overwriting local before polylang des it, beyause Polylang does it too late
 		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
 
 		// Redirecting to the current language page Id's
 		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
+
 	}
 
 	/**
@@ -156,9 +158,27 @@ class BPPL_BuddyPress {
 	 *
 	 * @uses  pll_current_language() to get the current language
 	 */
-	public function kill_language_slug( $request_uri ) {
+	public function remove_language_slug( $request_uri ) {
 		$path = str_replace( '/' . pll_current_language() . '/' , '/', $request_uri );
+
 		return $path;
+	}
+
+	/**
+	 * Adding slug to BuddyPress root domain
+	 *
+	 * Needed for links within BuddyPress
+	 *
+	 * @param string $url Unfiltered BuddyPress root domain.
+	 *
+	 * @return string $url Filtered BuddyPress root domain.
+	 */
+	public function add_language_slug( $url ) {
+		$lang_slug = bppl()->polylang()->get_lang_slug_by_locale( get_locale() );
+
+		$url = $url . '/' . $lang_slug;
+
+		return $url;
 	}
 }
 

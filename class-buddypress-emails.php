@@ -41,6 +41,15 @@ class BPPL_BuddyPress_Emails {
 	private $post_lang_rel = array();
 
 	/**
+	 * Current recipient to send out emails
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var null|WP_User
+	 */
+	private $current_recipient = null;
+
+	/**
 	 * BuddyPress_Polylang constructor
 	 *
 	 * @since 1.0.0
@@ -51,8 +60,8 @@ class BPPL_BuddyPress_Emails {
         add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
         add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
 
-        add_filter( 'bp_get_email_args', array( $this, 'bp_get_email_args' ), 10, 2 );
-        add_action( 'bp_email_set_to', array( $this, 'bp_email_set_to' ), 10, 5 );
+        add_filter( 'bp_get_email_args', array( $this, 'bp_set_email_args' ) );
+        add_action( 'bp_send_email', array( $this, 'bp_get_recipient' ), 10, 2 );
     }
 
 	/**
@@ -239,29 +248,58 @@ class BPPL_BuddyPress_Emails {
 		return $taxonomies;
 	}
 
-    public function bp_get_email_args( $args, $email_type ) {
-	    $languages = bppl()->polylang()->get_languages();
-        $base_term = $args[ 'tax_query' ][ 0 ][ 'terms' ];
+	/**
+	 * Setting up recipient
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param BP_Email $email Email object for email to send out
+	 * @param string $email_type Unique identifier for a particular type of email.
+	 */
+	public function bp_get_recipient( &$email, $email_type ) {
+		$user_email = $email->get_to();
+		$user = get_user_by( 'email', $user_email );
 
-        $terms = array();
-        foreach( $languages AS $language ) {
-            $terms[] = $base_term . '-' . $language[ 'lang' ];
-        }
+		$this->current_recipient = $user;
 
-	    $args[ 'numberposts' ] = -1;
-	    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $terms;
-	    return $args;
-    }
+		// Setting up Email again
+		$email = bp_get_email( $email_type );
+	}
 
-    public function bp_email_set_to( $to, $to_address, $name, $operation, $bp_email_object ) {
-        $user_email = $to[ 0 ]->get_address();
-	    $user = get_user_by( 'email', $user_email );
+	/**
+	 * Setting up query args for getting posts in correct language
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array $args Unfiltered query arguments
+	 *
+	 * @return array $args Filtered query arguments
+	 */
+    public function bp_set_email_args( $args ) {
+	    // If no recipient is set, just ask for all languages
+	    if( ! isset( $this->current_recipient ) ) {
+		    $languages = bppl()->polylang()->get_languages();
 
-	    $meta = get_user_meta( $user->ID, 'locale' );
+		    $base_term = $args[ 'tax_query' ][ 0 ][ 'terms' ];
 
-	    $pll = pll();
-	    $who = $to;
-        return $to;
+		    $terms = array();
+		    foreach( $languages AS $language ) {
+			    $terms[] = $base_term . '-' . $language[ 'lang' ];
+		    }
+
+		    $args[ 'numberposts' ] = -1;
+		    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $terms;
+
+	    	return $args;
+	    }
+
+	    // Getting correct language
+	    $locale = get_user_meta( $this->current_recipient->ID, 'locale' );
+	    $lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
+
+	    $args_filtered[ 'tax_query' ][ 0 ][ 'terms' ] = $args[ 'tax_query' ][ 0 ][ 'terms' ] . '-' . $lang;
+
+	    return $args_filtered;
     }
 }
 

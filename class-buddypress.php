@@ -81,6 +81,10 @@ class BPPL_BuddyPress {
 	 */
 	public function overwrite_locale( $locale ) {
 		if( null === $locale = $this->detected_locale ) {
+			if( ! array_key_exists( 'pll_language', $_COOKIE ) ) {
+				return $locale;
+			}
+
 			$lang = $_COOKIE[ 'pll_language' ];
 
 			if( false === $loaded_locale = $this->get_locale_from_transient( $lang ) ) {
@@ -146,7 +150,7 @@ class BPPL_BuddyPress {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $url Actual URL Path
+	 * @param string $request_uri Actual URL Path
 	 *
 	 * @return string $url Actual URL Path (filtered without language
 	 *

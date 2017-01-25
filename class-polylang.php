@@ -104,6 +104,10 @@ class BPPL_Polylang {
 	 * @return false|stdClass The User as object or false if nothing was found
 	 */
 	private function get_logged_in_user() {
+		if( ! array_key_exists( $this->get_logged_in_cookie_name(), $_COOKIE ) ) {
+			return false;
+		}
+
 		$cookie_content = $_COOKIE[ $this->get_logged_in_cookie_name() ];
 		$cookie_content = explode( '|', $cookie_content );
 
@@ -123,6 +127,10 @@ class BPPL_Polylang {
      */
 	private function init_current_user_language() {
 	    $user = $this->get_logged_in_user();
+
+	    if( false === $user ) {
+	    	return;
+	    }
 
 	    // If we have no user, we do not set anything
 	    if( 0 === $user->ID ) {

@@ -182,7 +182,17 @@ class BPPL_BuddyPress {
 	 * @return string $url Filtered BuddyPress root domain.
 	 */
 	public function add_language_slug( $url ) {
+		$locale = get_locale();
+
+		if( false === $locale ) {
+			return $url;
+		}
+
 		$lang_slug = bppl()->polylang()->get_lang_slug_by_locale( get_locale() );
+
+		if( is_wp_error( $lang_slug ) ) {
+			return $url;
+		}
 
 		$url = $url . '/' . $lang_slug;
 

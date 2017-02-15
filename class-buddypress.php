@@ -57,7 +57,15 @@ class BPPL_BuddyPress {
 	 * @uses pll_get_post() to get the related post in the current language
 	 */
 	public function replace_directory_page_ids( $page_ids ) {
+		if( ! function_exists( 'pll_current_language' ) ) {
+			return $page_ids;
+		}
+
 		$current_language = pll_current_language();
+
+		if( false === $current_language ) {
+			return $page_ids;
+		}
 
 		foreach( $page_ids AS $component_slug => $page_id ) {
 			$current_language_post_id = pll_get_post( $page_id, $current_language );

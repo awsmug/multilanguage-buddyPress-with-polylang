@@ -31,15 +31,23 @@ class BPPL_Polylang {
 	protected $current_user_lang = null;
 
 	/**
+	 * User data
+	 *
+	 * @var BPPL_User
+	 */
+	protected $user;
+
+	/**
 	 * Adding Actionhooks & Co.
 	 *
 	 * @since 1.0.0
 	 */
 	public function __construct() {
-        $this->init_polylang_languages();
-        $this->init_current_user_language();
+		$this->user = new BPPL_User();
 
-        $this->set_language_cookie();
+        $this->init_languages();
+		$this->set_language_cookie();
+
         add_action( 'pll_language_defined', array( $this, 'save_user_locale' ), 10, 2 );
 	}
 
@@ -50,7 +58,7 @@ class BPPL_Polylang {
 	 *
 	 * @since 1.0.0
 	 */
-	public function init_polylang_languages(){
+	private function init_languages(){
 	    global $wpdb;
 
         /**
@@ -79,107 +87,26 @@ class BPPL_Polylang {
 	}
 
 	/**
-	 * Get WordPress logged in cookie name
-	 *
-	 * This is used because we get in trouble with including userfunctions on Multisite
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string $logged_in_cookie The name of the cookie
-	 */
-	private function get_logged_in_cookie_name(){
-		$siteurl = get_site_option( 'siteurl' );
-		$cookie_hash = md5( $siteurl );
-		$logged_in_cookie = 'wordpress_logged_in_' . $cookie_hash;
-
-		return $logged_in_cookie;
-	}
-
-
-	/**
-	 * Getting logged in User
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return false|stdClass The User as object or false if nothing was found
-	 */
-	private function get_logged_in_user() {
-		if( ! array_key_exists( $this->get_logged_in_cookie_name(), $_COOKIE ) ) {
-			return false;
-		}
-
-		$cookie_content = $_COOKIE[ $this->get_logged_in_cookie_name() ];
-		$cookie_content = explode( '|', $cookie_content );
-
-		$user = WP_User::get_data_by( 'login', $cookie_content[ 0 ] );
-
-		return $user;
-	}
-
-
-    /**
-     * Setting PLL language cookie
-     *
-     * We are setting and overwriting the cookie every time from DB,
-     * because we can have different users using one.
-     *
-     * @since 1.0.0
-     */
-	private function init_current_user_language() {
-	    $user = $this->get_logged_in_user();
-
-	    if( false === $user ) {
-	    	return;
-	    }
-
-	    // If we have no user, we do not set anything
-	    if( 0 === $user->ID ) {
-	        return;
-        }
-
-		$lang_slug = $this->get_default_lang();
-
-        if ( ! empty( $user->locale ) ) {
-	        $lang_slug = $this->get_lang_slug_by_locale( $user->locale );
-        }
-
-	    if( is_wp_error( $lang_slug ) ) {
-		    bppl_messages()->add( $lang_slug->get_error_message() );
-	        return;
-        }
-
-        $this->current_user_lang = $lang_slug;
-    }
-
-	/**
 	 * Setting up language cookie of Polylang
 	 *
 	 * @since 1.0.0
 	 */
     private function set_language_cookie() {
-	    if( ! setcookie( 'pll_language', $this->current_user_lang ) ) {
+    	$locale = $this->user->get_locale();
+
+    	if( empty( $locale ) ) {
+    		return;
+	    }
+
+    	if( ! is_wp_error( $locale ) ) {
+			$lang = $this->get_lang_slug_by_locale( $locale );
+	    } else {
+		    $lang = $this->get_default_lang();
+	    }
+
+	    if( ! setcookie( 'pll_language', $lang ) ) {
 	    	bppl_messages()->add( __( 'Could not set language cookie for Polylang', 'buddypress-polylang' ) );
 	    }
-    }
-
-	/**
-	 * Getting default language of Polylang
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string
-	 */
-    public function get_default_lang() {
-    	$default_lang = $this->get_option( 'default_lang' );
-
-	    /**
-	     * Filter for default language
-	     *
-	     * @since 1.0.0
-	     *
-	     * @param string $default_language The requested field for the default language
-	     */
-		return apply_filters( 'bppl_default_language', $default_lang );
     }
 
 	/**
@@ -199,38 +126,6 @@ class BPPL_Polylang {
 	    }
 
     	return $options[ $option_name ];
-    }
-
-    /**
-     * Setting the user locale
-     *
-     * Saves the user locale to the user settings
-     *
-     * @since 1.0.0
-     *
-     * @param string $lang_slug Language slug
-     * @param PLL_Language $current_lang Language object
-     *
-     * @return bool|WP_Error $saved True if everything is saved fine or WP_Error on failure.
-     */
-    public function save_user_locale( $lang_slug, $current_lang ) {
-	    $user = wp_get_current_user();
-
-	    // We do not save if the user has not logged in or he is in wp-admin
-	    if( 0 === $user->ID || is_admin() ) {
-		    return;
-	    }
-
-	    wp_update_user( array( 'ID' => $user->ID, 'locale' => $current_lang->locale ) );
-    }
-
-	/**
-	 * Returns current user language
-	 *
-	 * @since 1.0.0
-	 */
-    public function get_current_user_lang() {
-		return $this->current_user_lang;
     }
 
 	/**
@@ -287,5 +182,48 @@ class BPPL_Polylang {
 	public function get_lang_slug_by_locale( $locale ) {
 		$lang = $this->get_value_by( 'locale', $locale, 'lang' );
 		return $lang;
+	}
+
+	/**
+	 * Getting default language of Polylang
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	public function get_default_lang() {
+		$default_lang = $this->get_option( 'default_lang' );
+
+		/**
+		 * Filter for default language
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param string $default_language The requested field for the default language
+		 */
+		return apply_filters( 'bppl_default_language', $default_lang );
+	}
+
+	/**
+	 * Setting the user locale
+	 *
+	 * Saves the user locale to the user settings
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $lang_slug Language slug
+	 * @param PLL_Language $current_lang Language object
+	 *
+	 * @return bool|WP_Error $saved True if everything is saved fine or WP_Error on failure.
+	 */
+	public function save_user_locale( $lang_slug, $current_lang ) {
+		$user = wp_get_current_user();
+
+		// We do not save if the user has not logged in or he is in wp-admin
+		if( 0 === $user->ID || is_admin() ) {
+			return;
+		}
+
+		wp_update_user( array( 'ID' => $user->ID, 'locale' => $current_lang->locale ) );
 	}
 }

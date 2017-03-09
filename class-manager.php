@@ -23,6 +23,15 @@ class BPPL_Manager{
 	private $plugin = null;
 
 	/**
+	 * User object holder
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var BPPL_User
+	 */
+	private $user = null;
+
+	/**
 	 * Polylang object holder
 	 *
 	 * @since 1.0.0
@@ -65,6 +74,7 @@ class BPPL_Manager{
 	 */
 	private function __construct() {
 		$this->plugin = new BPPL_Loader();
+		$this->user = new BPPL_User();
 		$this->polylang = new BPPL_Polylang();
 		$this->buddypress = new BPPL_BuddyPress();
 		$this->buddypress_emails = new BPPL_BuddyPress_Emails();
@@ -83,6 +93,17 @@ class BPPL_Manager{
 		}
 
 		return static::$instance;
+	}
+
+	/**
+	 * User object
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return BPPL_User
+	 */
+	public function user() {
+		return $this->user;
 	}
 
 	/**

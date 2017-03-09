@@ -27,21 +27,18 @@ class BPPL_BuddyPress {
 	 * @since 1.0.0
 	 */
 	final public function __construct() {
-		// We do not need the following functionality in the admin
+		// Overwriting local before polylang des it, beyause Polylang does it too late
+		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
+
 		if( is_admin() ) {
 			return;
 		}
 
-		// Adding and removing language slug to url
 		add_filter( 'bp_uri', array( $this, 'remove_language_slug' ), 0 );
-		add_filter( 'bp_core_get_root_domain', array( $this, 'add_language_slug' ) );
-
-		// Overwriting local before polylang des it, beyause Polylang does it too late
-		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
-
 		// Redirecting to the current language page Id's
 		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
-
+		// Adding and removing language slug to url
+		add_filter( 'bp_core_get_root_domain', array( $this, 'add_language_slug' ) );
 	}
 
 	/**
@@ -91,11 +88,9 @@ class BPPL_BuddyPress {
 	 */
 	public function overwrite_locale( $locale ) {
 		if( null === $locale = $this->detected_locale ) {
-			if( ! array_key_exists( 'pll_language', $_COOKIE ) ) {
+			if( false === $lang = $this->get_user_lang() ) {
 				return $locale;
 			}
-
-			$lang = $_COOKIE[ 'pll_language' ];
 
 			if( false === $loaded_locale = $this->get_locale_from_transient( $lang ) ) {
 				$loaded_locale = $this->get_locales_from_db( $lang );
@@ -110,6 +105,14 @@ class BPPL_BuddyPress {
 		return $this->detected_locale;
 	}
 
+	public function get_user_lang() {
+		if( array_key_exists( 'pll_language', $_COOKIE ) ) {
+			return $_COOKIE[ 'pll_language' ];
+		}
+
+		return false;
+	}
+
 	/**
 	 * Get locale from cache
 	 *
@@ -121,6 +124,10 @@ class BPPL_BuddyPress {
 	 */
 	private function get_locale_from_transient( $lang ) {
 		$languages = get_transient( 'pll_languages_list' );
+
+		if( ! is_array( $languages ) ) {
+			return false;
+		}
 
 		foreach( $languages AS $language ) {
 			if( $language[ 'slug' ] === $lang ) {
@@ -167,6 +174,10 @@ class BPPL_BuddyPress {
 	 * @uses  pll_current_language() to get the current language
 	 */
 	public function remove_language_slug( $request_uri ) {
+		if( ! function_exists( 'pll_current_language' ) ) {
+			return $request_uri;
+		}
+
 		$path = str_replace( '/' . pll_current_language() . '/' , '/', $request_uri );
 
 		return $path;

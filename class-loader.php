@@ -47,6 +47,7 @@ class BPPL_Loader {
 	private static function includes() {
 		require_once dirname( __FILE__ ) . '/lib/class-messages.php';
 		require_once dirname( __FILE__ ) . '/class-manager.php';
+		require_once dirname( __FILE__ ) . '/class-user.php';
 		require_once dirname( __FILE__ ) . '/class-polylang.php';
 		require_once dirname( __FILE__ ) . '/class-buddypress.php';
 		require_once dirname( __FILE__ ) . '/class-buddypress-emails.php';

@@ -352,6 +352,9 @@ class BPPL_BuddyPress_Emails {
 			return;
 		}
 
+		$args['tokens'] = $this->replace_promote_to_string( $args['tokens'], $email_type, $user->ID );
+		$args['tokens'] = apply_filters( 'bppl_email_tokens', $args['tokens'], $email_type, $user->ID );
+
 		// From, subject, content are set automatically.
 		$email->set_to( $user->ID );
 		$email->set_tokens( $args['tokens'] );
@@ -380,11 +383,38 @@ class BPPL_BuddyPress_Emails {
 	}
 
 	/**
+	 * Replacing promote to tokens, because used before
+	 *
+	 * @param array $tokens
+	 * @param string $email_type
+	 * @param int $user_id
+	 *
+	 * @return array $tokens
+	 */
+	private function replace_promote_to_string( $tokens, $email_type, $user_id ) {
+		if( 'groups-member-promoted' !== $email_type ) {
+			return $tokens;
+		}
+
+		$group_id = $tokens[ 'group.id' ];
+
+		if ( groups_is_user_admin( $user_id, $group_id ) ) {
+			$promoted_to = __( 'an administrator', 'buddypress' );
+		} else {
+			$promoted_to = __( 'a moderator', 'buddypress' );
+		}
+
+		$tokens[ 'promoted_to' ] = $promoted_to;
+
+		return $tokens;
+	}
+
+	/**
 	 * Getting recipient from BuddyPress $to
 	 *
 	 * @param $to mixed Either a email address, user ID, WP_User object, or an array containg the address and name.
 	 *
-	 * @return bool|false|WP_User
+	 * @return bool|false|WP_User $user_id
 	 */
 	private function get_recipient_user( $to ) {
 		if ( is_object( $to ) ) {

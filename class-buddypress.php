@@ -30,15 +30,35 @@ class BPPL_BuddyPress {
 		// Overwriting local before polylang des it, beyause Polylang does it too late
 		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
 
-		add_filter( 'bp_uri', array( $this, 'remove_language_slug' ), 0 );
-		add_filter( 'bp_core_get_root_domain', array( $this, 'add_language_slug' ) );
-
 		if ( is_admin() ) {
 			return;
 		}
 
-		// Redirecting to the current language page Id's
 		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
+		add_filter( 'bp_core_get_directory_pages', array( $this, 'replace_page_slugs' ) );
+
+	}
+
+	/**
+	 * Replacing page slugs because BuddyPress uses page slugs to create URLS where language is missed
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param stdClass $pages
+	 *
+	 * @return stdClass $pages
+	 */
+	public function replace_page_slugs( $pages ) {
+		// Todo: Should check whats happening on subdomain languages and so on!
+		foreach ( $pages AS $component => $page ) {
+			$permalink = get_permalink( $page->id );
+			$path = str_replace( bp_core_get_root_domain(), '', $permalink );
+			$path = trim ( $path, '/' );
+			$page->slug = $path;
+			$pages->$component = $page;
+		}
+
+		return $pages;
 	}
 
 	/**
@@ -115,11 +135,11 @@ class BPPL_BuddyPress {
 	 *
 	 * @param $locale
 	 *
-	 * @return bool|string
+	 * @return bool|string $detected_locale Locale which was detected for user
 	 */
 	public function overwrite_locale( $locale ) {
 		if ( null === $locale = $this->detected_locale ) {
-			if ( false === $lang = $this->get_user_lang() ) {
+			if ( false === $lang = $this->get_cookie_lang() ) {
 				return $locale;
 			}
 
@@ -136,7 +156,14 @@ class BPPL_BuddyPress {
 		return $this->detected_locale;
 	}
 
-	public function get_user_lang() {
+	/**
+	 * Gettung users language by cookie
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return bool
+	 */
+	public function get_cookie_lang() {
 		if ( array_key_exists( 'pll_language', $_COOKIE ) ) {
 			return $_COOKIE['pll_language'];
 		}
@@ -190,58 +217,6 @@ class BPPL_BuddyPress {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Removing language slug from BuddyPress URL
-	 *
-	 * BuddyPress is irritated about language slugs from polylang and can't setup anymore with polylang. So we kill the language slug.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $request_uri Actual URL Path
-	 *
-	 * @return string $url Actual URL Path (filtered without language
-	 *
-	 * @uses  pll_current_language() to get the current language
-	 */
-	public function remove_language_slug( $request_uri ) {
-		if ( ! function_exists( 'pll_current_language' ) ) {
-			return $request_uri;
-		}
-
-		$path = str_replace( '/' . pll_current_language() . '/', '/', $request_uri );
-
-		return $path;
-	}
-
-	/**
-	 * Adding slug to BuddyPress root domain
-	 *
-	 * Needed for links within BuddyPress
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $url Unfiltered BuddyPress root domain.
-	 *
-	 * @return string $url Filtered BuddyPress root domain.
-	 */
-	public function add_language_slug( $url ) {
-		$locale = get_locale();
-
-		if ( false === $locale ) {
-			return $url;
-		}
-
-		$lang_slug = bppl()->polylang()->get_lang_slug_by_locale( $locale );
-
-		if ( is_wp_error( $lang_slug ) ) {
-			return $url;
-		}
-
-		$url = $url . '/' . $lang_slug;
-
-		return $url;
 	}
 }
 

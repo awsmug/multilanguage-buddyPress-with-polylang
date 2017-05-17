@@ -48,7 +48,8 @@ class BPPL_Polylang {
         $this->init_languages();
 		$this->set_language_cookie();
 
-        add_action( 'pll_language_defined', array( $this, 'save_user_locale' ), 10, 2 );
+		// Todo: Maybe change this, because it changes the user language on opening sites of other languages
+        add_action( 'pll_language_defined', array( $this, 'define_language' ), 10, 2 );
 	}
 
 	/**
@@ -77,12 +78,16 @@ class BPPL_Polylang {
 		foreach( $languages AS $language ) {
 			$description = maybe_unserialize( $language->description );
 
-			$this->languages[ $language->slug ] = array(
-				'term_id' => $language->term_id,
-				'name' => $language->name,
-				'lang'  => $language->slug,
-				'locale' => $description[ 'locale' ],
-			);
+			if( is_array( $description ) &&  array_key_exists( 'locale', $description )) {
+				$locale = $description[ 'locale' ];
+
+				$this->languages[ $language->slug ] = array(
+					'term_id' => $language->term_id,
+					'name' => $language->name,
+					'lang'  => $language->slug,
+					'locale' => $locale,
+				);
+			}
 		}
 	}
 
@@ -102,6 +107,10 @@ class BPPL_Polylang {
 			$lang = $this->get_lang_slug_by_locale( $locale );
 	    } else {
 		    $lang = $this->get_default_lang();
+	    }
+
+	    if( is_wp_error( $lang ) ) {
+			return $lang;
 	    }
 
 	    if( ! setcookie( 'pll_language', $lang ) ) {
@@ -175,13 +184,27 @@ class BPPL_Polylang {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $locale Name of the locale
+	 * @param string $locale Lang slug
 	 *
 	 * @return string|WP_Error
 	 */
 	public function get_lang_slug_by_locale( $locale ) {
 		$lang = $this->get_value_by( 'locale', $locale, 'lang' );
 		return $lang;
+	}
+
+	/**
+	 * Getting a language slug by locale
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $locale Name of the locale
+	 *
+	 * @return string|WP_Error
+	 */
+	public function get_locale_by_lang_slug( $lang ) {
+		$locale = $this->get_value_by( 'lang', $lang, 'locale' );
+		return $locale;
 	}
 
 	/**
@@ -205,6 +228,40 @@ class BPPL_Polylang {
 	}
 
 	/**
+	 * Getting user locale
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param $user_id int User ID
+	 *
+	 * @return array|mixed|WP_Error
+	 */
+	public function get_user_locale( $user_id ) {
+		$locale = get_user_meta( $user_id, 'locale', true );
+
+		if( empty( $locale ) ) {
+			$lang = bppl()->polylang()->get_default_lang();
+			$locale = bppl()->polylang()->get_value_by('lang', $lang, 'locale');
+		}
+
+		return $locale;
+	}
+
+	/**
+	 * Saving the locale for a user in WordPress user locale
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param $user_id
+	 * @param $locale
+	 *
+	 * @return int|WP_Error
+	 */
+	public function save_user_locale( $user_id, $locale ) {
+		return wp_update_user( array( 'ID' => $user_id, 'locale' => $locale ) );
+	}
+
+	/**
 	 * Setting the user locale
 	 *
 	 * Saves the user locale to the user settings
@@ -216,7 +273,7 @@ class BPPL_Polylang {
 	 *
 	 * @return bool|WP_Error $saved True if everything is saved fine or WP_Error on failure.
 	 */
-	public function save_user_locale( $lang_slug, $current_lang ) {
+	public function define_language( $lang_slug, $current_lang ) {
 		$user = wp_get_current_user();
 
 		// We do not save if the user has not logged in or he is in wp-admin
@@ -224,6 +281,6 @@ class BPPL_Polylang {
 			return;
 		}
 
-		wp_update_user( array( 'ID' => $user->ID, 'locale' => $current_lang->locale ) );
+		$this->save_user_locale( $user->ID, $current_lang->locale );
 	}
 }

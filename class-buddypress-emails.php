@@ -7,7 +7,7 @@
  * This class contains the functionalities to install and send out emails in the correct language
  */
 
-if( ! defined( 'ABSPATH' ) ) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -31,13 +31,22 @@ class BPPL_BuddyPress_Emails {
 	 */
 	protected $temp_locale = null;
 
-    /**
-     * Post language relationships
-     *
-     * @since 1.0.0
-     *
-     * @var array
-     */
+	/**
+	 * Locales which have to be reloaded on email sending
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var array
+	 */
+	protected $reload_locales = array();
+
+	/**
+	 * Post language relationships
+	 *
+	 * @since 1.0.0
+	 *
+	 * @var array
+	 */
 	private $post_lang_rel = array();
 
 	/**
@@ -57,12 +66,14 @@ class BPPL_BuddyPress_Emails {
 	final public function __construct() {
 		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
 
-        add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
-        add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
+		add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
+		add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
 
-        add_filter( 'bp_get_email_args', array( $this, 'bp_set_email_args' ) );
-        add_action( 'bp_send_email', array( $this, 'bp_get_recipient' ), 10, 2 );
-    }
+		add_action( 'bp_send_email', array( $this, 'bp_get_recipient' ), 5, 3 );
+		add_filter( 'bp_send_email', array( $this, 'replace_email_content' ), 10, 4 );
+
+		add_filter( 'bp_get_email_args', array( $this, 'bp_set_email_args' ) );
+	}
 
 	/**
 	 * Installing all emails of the Polylang added languages
@@ -78,7 +89,7 @@ class BPPL_BuddyPress_Emails {
 		// Deleting everything created before
 		$this->delete_emails();
 
-		foreach( $locales AS $locale ) {
+		foreach ( $locales AS $locale ) {
 			$this->temp_locale = $locale;
 
 			add_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
@@ -86,10 +97,10 @@ class BPPL_BuddyPress_Emails {
 			load_plugin_textdomain( 'buddypress' );
 			$installed = $this->install_emails( $locale );
 
-			if( is_wp_error( $installed ) ) {
-                bppl_messages()->add( $installed->get_error_message() );
-                break;
-            }
+			if ( is_wp_error( $installed ) ) {
+				bppl_messages()->add( $installed->get_error_message() );
+				break;
+			}
 			remove_filter( 'locale', array( $this, 'set_temporary_locale' ) );
 		}
 
@@ -98,20 +109,20 @@ class BPPL_BuddyPress_Emails {
 		load_plugin_textdomain( 'buddypress' );
 
 		// Saving relations between posts
-		foreach( $this->post_lang_rel AS $post_lang_rel ) {
-		    $posts = array();
-		    foreach( $post_lang_rel AS $locale => $post_id ) {
-                $lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
-                if( is_wp_error( $lang ) ) {
-                    bppl()->message( $lang->get_error_message() );
-                    break;
-                }
+		foreach ( $this->post_lang_rel AS $post_lang_rel ) {
+			$posts = array();
+			foreach ( $post_lang_rel AS $locale => $post_id ) {
+				$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
+				if ( is_wp_error( $lang ) ) {
+					bppl()->message( $lang->get_error_message() );
+					break;
+				}
 
-                $posts[ $lang ] = $post_id;
-            }
+				$posts[ $lang ] = $post_id;
+			}
 
-            pll_save_post_translations( $posts );
-        }
+			pll_save_post_translations( $posts );
+		}
 	}
 
 	/**
@@ -120,12 +131,13 @@ class BPPL_BuddyPress_Emails {
 	 * @since 1.0.0
 	 *
 	 * @param string $locale
-     * @return boolean|WP_Error
+	 *
+	 * @return boolean|WP_Error
 	 */
 	private function install_emails( $locale ) {
 		$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
 
-		if( is_wp_error( $lang ) ) {
+		if ( is_wp_error( $lang ) ) {
 			return $lang;
 		}
 
@@ -179,12 +191,12 @@ class BPPL_BuddyPress_Emails {
 	 */
 	public function delete_emails() {
 		$emails = get_posts( array(
-			                     'fields'           => 'idsBP_Email_Translate',
-			                     'post_status'      => 'publish',
-			                     'post_type'        => bp_get_email_post_type(),
-			                     'posts_per_page'   => -1,
-			                     'suppress_filters' => false,
-		                     ) );
+			'fields'           => 'idsBP_Email_Translate',
+			'post_status'      => 'publish',
+			'post_type'        => bp_get_email_post_type(),
+			'posts_per_page'   => - 1,
+			'suppress_filters' => false,
+		) );
 
 		if ( $emails ) {
 			foreach ( $emails as $email_id ) {
@@ -216,9 +228,10 @@ class BPPL_BuddyPress_Emails {
 	 * @return string $locale Filtered locale
 	 */
 	public function set_temporary_locale( $locale ) {
-		if( empty( $this->temp_locale ) ) {
+		if ( empty( $this->temp_locale ) ) {
 			return $locale;
 		}
+
 		return $this->temp_locale;
 	}
 
@@ -233,20 +246,22 @@ class BPPL_BuddyPress_Emails {
 	 */
 	public function add_post_type_slug( $post_types ) {
 		$post_types[ bp_get_email_post_type() ] = bp_get_email_post_type();
+
 		return $post_types;
 	}
 
-    /**
-     * Adding Taxonomies to Polylang translations
-     *
-     * @since 1.0.0
-     *
-     * @param $taxonomies
-     *
-     * @return mixed
-     */
+	/**
+	 * Adding Taxonomies to Polylang translations
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param $taxonomies
+	 *
+	 * @return mixed
+	 */
 	public function add_taxonomy( $taxonomies ) {
 		$taxonomies[ bp_get_email_tax_type() ] = bp_get_email_tax_type();
+
 		return $taxonomies;
 	}
 
@@ -257,17 +272,12 @@ class BPPL_BuddyPress_Emails {
 	 *
 	 * @param BP_Email $email Email object for email to send out
 	 * @param string $email_type Unique identifier for a particular type of email.
+	 * @param string $to Either a email address, user ID, WP_User object,
+	 *                   or an array containg the address and name.
 	 */
-	public function bp_get_recipient( &$email, $email_type ) {
-		$user_email = $email->get_to();
-		$user_email = $user_email[ 0 ]->get_address();
-		$user = get_user_by( 'email', $user_email );
-
+	public function bp_get_recipient( $email, $email_type, $to ) {
+		$user = $this->get_recipient_user( $to );
 		$this->current_recipient = $user;
-
-		// Setting up Email again
-		$email = bp_get_email( $email_type );
-		return;
 	}
 
 	/**
@@ -279,35 +289,184 @@ class BPPL_BuddyPress_Emails {
 	 *
 	 * @return array $args Filtered query arguments
 	 */
-    public function bp_set_email_args( $args ) {
-    	if ( is_wp_error( $args ) ) {
-    		return $args;
-	    }
+	public function bp_set_email_args( $args ) {
+		if ( is_wp_error( $args ) ) {
+			return $args;
+		}
 
-	    // If no recipient is set, just ask for all languages
-	    if( ! isset( $this->current_recipient ) ) {
-		    $languages = bppl()->polylang()->get_languages();
+		// If no recipient is set, just ask for all languages
+		if ( ! isset( $this->current_recipient ) ) {
+			$languages = bppl()->polylang()->get_languages();
 
-		    $base_term = $args[ 'tax_query' ][ 0 ][ 'terms' ];
+			$base_term = $args['tax_query'][0]['terms'];
 
-		    $terms = array();
-		    foreach( $languages AS $language ) {
-			    $terms[] = $base_term . '-' . $language[ 'lang' ];
-		    }
+			$terms = array();
+			foreach ( $languages AS $language ) {
+				$terms[] = $base_term . '-' . $language['lang'];
+			}
 
-		    $args[ 'numberposts' ] = -1;
-		    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $terms;
+			$args['numberposts']           = - 1;
+			$args['tax_query'][0]['terms'] = $terms;
 
-	    	return $args;
-	    }
+			return $args;
+		}
 
-	    // Getting correct language
-	    $locale = get_user_meta( $this->current_recipient->ID, 'locale', true );
-	    $lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
+		// Getting correct language
+		$locale = get_user_meta( $this->current_recipient->ID, 'locale', true );
 
-	    $args[ 'tax_query' ][ 0 ][ 'terms' ] = $args[ 'tax_query' ][ 0 ][ 'terms' ] . '-' . $lang;
+		if ( empty( $locale ) ) {
+			$lang = bppl()->polylang()->get_default_lang();
+		} else {
+			$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
+		}
 
-	    return $args;
-    }
+		$args['tax_query'][0]['terms'] = $args['tax_query'][0]['terms'] . '-' . $lang;
+
+		return $args;
+	}
+
+	/**
+	 * Replacing Email Content with correct language
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param $email BP_Email       BuddyPress Email
+	 * @param $email_type string    Email type
+	 * @param $to mixed            Either a email address, user ID, WP_User object, or an array containg the address and name.
+	 * @param $args array $args {
+	 *     Optional. Array of extra parameters.
+	 *     @type array $tokens Optional. Assocative arrays of string replacements for the email.
+	 * }
+	 */
+	public function replace_email_content( &$email, $email_type, $to, $args ) {
+		$user = $this->get_recipient_user( $to );
+
+		if( false === $user ) {
+			return;
+		}
+
+		$this->load_user_locales( $user->ID );
+
+		$email = bp_get_email( $email_type );
+		if ( is_wp_error( $email ) ) {
+			return;
+		}
+
+		// From, subject, content are set automatically.
+		$email->set_to( $user->ID );
+		$email->set_tokens( $args['tokens'] );
+
+		$sender_lang    = bppl()->polylang()->get_lang_slug_by_locale( get_locale() );
+		$recipient_lang = bppl()->polylang()->get_lang_slug_by_locale( $this->temp_locale );
+
+		$origin_domain  = bp_core_get_root_domain();
+		$replace_domain = str_replace( '/' . $sender_lang, '/' . $recipient_lang, $origin_domain );
+
+		$lang_page_ids = bppl()->buddypress()->get_directory_page_ids();
+
+		$sender_page_ids = $lang_page_ids[ $sender_lang ];
+		$recipient_page_ids = $lang_page_ids[ $recipient_lang ];
+
+		foreach( $sender_page_ids AS $component => $page_id ) {
+			$origin_url = get_permalink( $page_id );
+			$replace_url = get_permalink(  $recipient_page_ids[ $component ] );
+
+			$this->replace_email_links( $email, $origin_url, $replace_url );
+		}
+
+		$this->replace_email_links( $email, $origin_domain, $replace_domain );
+
+		$this->reset_plugin_locales();
+	}
+
+	/**
+	 * Getting recipient from BuddyPress $to
+	 *
+	 * @param $to mixed Either a email address, user ID, WP_User object, or an array containg the address and name.
+	 *
+	 * @return bool|false|WP_User
+	 */
+	private function get_recipient_user( $to ) {
+		if ( is_object( $to ) ) {
+			return $to;
+		}
+
+		if( is_int( $to ) ) {
+			return get_user_by('id', $to );
+		}
+
+		if( is_string( $to ) ) {
+			return get_user_by('email', $to );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Replacing links in Email
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param $email BP_Email BuddyPress Email
+	 * @param $link string Link which have to be replaced
+	 * @param $replacement string Replacement
+	 */
+	private function replace_email_links( &$email, $link, $replacement ) {
+		// Replacing links in tokens
+		$tokens = $email->get_tokens();
+
+		foreach ( $tokens AS $key => $token ) {
+			if ( ! is_string( $token ) ) {
+				continue;
+			}
+
+			$tokens[ $key ] = str_replace( $link, $replacement, $token );
+		}
+
+		$email->set_tokens( $tokens );
+
+		// Replacing links in HTML and text content
+		$html = str_replace( $link, $replacement, $email->get_content_html() );
+		$text = str_replace( $link, $replacement, $email->get_content_plaintext() );
+
+		$email->set_content_html( $html );
+		$email->set_content_plaintext( $text );
+	}
+
+	/**
+	 * Loading plugin locales for user
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param $to int $user_id User ID
+	 */
+	private function load_user_locales( $to ) {
+		// Todo: Checking on User object and array...
+		add_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
+
+		$this->temp_locale = bppl()->polylang()->get_user_locale( $to );
+		$this->reload_locales = apply_filters( 'bppl_reload_locales', array( 'buddypress' ) );
+
+		foreach( $this->reload_locales AS $locale ) {
+			unload_textdomain( $locale );
+			load_plugin_textdomain( $locale );
+		}
+	}
+
+	/**
+	 * Loading site plugin locales
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return mixed
+	 */
+	private function reset_plugin_locales() {
+		remove_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
+
+		foreach( $this->reload_locales AS $locale ) {
+			unload_textdomain( $locale );
+			load_plugin_textdomain( $locale );
+		}
+	}
 }
 

@@ -116,4 +116,15 @@ class BPPL_Manager{
 	public function polylang() {
 		return $this->polylang;
 	}
+
+	/**
+	 * BuddyPress object
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return BPPL_BuddyPress
+	 */
+	public function buddypress() {
+		return $this->buddypress;
+	}
 }

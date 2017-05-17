@@ -7,7 +7,7 @@
  * This class managaes all needed BuddyPress functionality for translations
  */
 
-if( ! defined( 'ABSPATH' ) ) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
@@ -30,15 +30,15 @@ class BPPL_BuddyPress {
 		// Overwriting local before polylang des it, beyause Polylang does it too late
 		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
 
-		if( is_admin() ) {
+		add_filter( 'bp_uri', array( $this, 'remove_language_slug' ), 0 );
+		add_filter( 'bp_core_get_root_domain', array( $this, 'add_language_slug' ) );
+
+		if ( is_admin() ) {
 			return;
 		}
 
-		add_filter( 'bp_uri', array( $this, 'remove_language_slug' ), 0 );
 		// Redirecting to the current language page Id's
 		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
-		// Adding and removing language slug to url
-		add_filter( 'bp_core_get_root_domain', array( $this, 'add_language_slug' ) );
 	}
 
 	/**
@@ -54,25 +54,56 @@ class BPPL_BuddyPress {
 	 * @uses pll_get_post() to get the related post in the current language
 	 */
 	public function replace_directory_page_ids( $page_ids ) {
-		if( ! function_exists( 'pll_current_language' ) ) {
+		if ( ! function_exists( 'pll_current_language' ) ) {
 			return $page_ids;
 		}
 
 		$current_language = pll_current_language();
 
-		if( false === $current_language ) {
+		if ( false === $current_language ) {
 			return $page_ids;
 		}
 
-		foreach( $page_ids AS $component_slug => $page_id ) {
+		foreach ( $page_ids AS $component_slug => $page_id ) {
 			$current_language_post_id = pll_get_post( $page_id, $current_language );
 
-			if( false !== $current_language_post_id ) {
+			if ( false !== $current_language_post_id ) {
 				$page_ids[ $component_slug ] = $current_language_post_id;
 			}
 		}
 
 		return $page_ids;
+	}
+
+	/**
+	 * Getting directory page ids ordered by language
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array $directory_page_ids Directory page ids ordered by language
+	 */
+	public function get_directory_page_ids() {
+		// Getting unfiltered page ids
+		remove_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
+		$core_page_ids = bp_core_get_directory_page_ids();
+		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
+
+		$directory_page_ids = array();
+		$languages = bppl()->polylang()->get_languages();
+
+		foreach ( $languages AS $language => $language_info ) {
+			$pages_ids = array();
+
+			foreach ( $core_page_ids as $component_slug => $page_id ) {
+				$language_post_id = pll_get_post( $page_id, $language );
+
+				$pages_ids[ $component_slug ] = $language_post_id;
+			}
+
+			$directory_page_ids[ $language ] = $pages_ids;
+		}
+
+		return $directory_page_ids;
 	}
 
 	/**
@@ -87,18 +118,18 @@ class BPPL_BuddyPress {
 	 * @return bool|string
 	 */
 	public function overwrite_locale( $locale ) {
-		if( null === $locale = $this->detected_locale ) {
-			if( false === $lang = $this->get_user_lang() ) {
+		if ( null === $locale = $this->detected_locale ) {
+			if ( false === $lang = $this->get_user_lang() ) {
 				return $locale;
 			}
 
-			if( false === $loaded_locale = $this->get_locale_from_transient( $lang ) ) {
+			if ( false === $loaded_locale = $this->get_locale_from_transient( $lang ) ) {
 				$loaded_locale = $this->get_locales_from_db( $lang );
 			}
 			$this->detected_locale = $loaded_locale;
 		}
 
-		if( false === $this->detected_locale ) {
+		if ( false === $this->detected_locale ) {
 			return $locale;
 		}
 
@@ -106,8 +137,8 @@ class BPPL_BuddyPress {
 	}
 
 	public function get_user_lang() {
-		if( array_key_exists( 'pll_language', $_COOKIE ) ) {
-			return $_COOKIE[ 'pll_language' ];
+		if ( array_key_exists( 'pll_language', $_COOKIE ) ) {
+			return $_COOKIE['pll_language'];
 		}
 
 		return false;
@@ -125,15 +156,16 @@ class BPPL_BuddyPress {
 	private function get_locale_from_transient( $lang ) {
 		$languages = get_transient( 'pll_languages_list' );
 
-		if( ! is_array( $languages ) ) {
+		if ( ! is_array( $languages ) ) {
 			return false;
 		}
 
-		foreach( $languages AS $language ) {
-			if( $language[ 'slug' ] === $lang ) {
-				return $language[ 'locale' ];
+		foreach ( $languages AS $language ) {
+			if ( $language['slug'] === $lang ) {
+				return $language['locale'];
 			}
 		}
+
 		return false;
 	}
 
@@ -146,14 +178,14 @@ class BPPL_BuddyPress {
 	 *
 	 * @return bool|string $locale (de_DE,en_EN...)
 	 */
-	private function get_locales_from_db( $lang ){
+	private function get_locales_from_db( $lang ) {
 		global $wpdb;
 
 		$languages = $wpdb->get_col( "SELECT locale FROM {$wpdb->term_taxonomy} WHERE taxonomy='language'" );
 		foreach ( $languages AS $language ) {
 			$language = maybe_unserialize( $language );
-			if( $language[ 'flag_code' ] === $lang ) {
-				return $language[ 'locale' ];
+			if ( $language['flag_code'] === $lang ) {
+				return $language['locale'];
 			}
 		}
 
@@ -174,11 +206,11 @@ class BPPL_BuddyPress {
 	 * @uses  pll_current_language() to get the current language
 	 */
 	public function remove_language_slug( $request_uri ) {
-		if( ! function_exists( 'pll_current_language' ) ) {
+		if ( ! function_exists( 'pll_current_language' ) ) {
 			return $request_uri;
 		}
 
-		$path = str_replace( '/' . pll_current_language() . '/' , '/', $request_uri );
+		$path = str_replace( '/' . pll_current_language() . '/', '/', $request_uri );
 
 		return $path;
 	}
@@ -188,6 +220,8 @@ class BPPL_BuddyPress {
 	 *
 	 * Needed for links within BuddyPress
 	 *
+	 * @since 1.0.0
+	 *
 	 * @param string $url Unfiltered BuddyPress root domain.
 	 *
 	 * @return string $url Filtered BuddyPress root domain.
@@ -195,13 +229,13 @@ class BPPL_BuddyPress {
 	public function add_language_slug( $url ) {
 		$locale = get_locale();
 
-		if( false === $locale ) {
+		if ( false === $locale ) {
 			return $url;
 		}
 
-		$lang_slug = bppl()->polylang()->get_lang_slug_by_locale( get_locale() );
+		$lang_slug = bppl()->polylang()->get_lang_slug_by_locale( $locale );
 
-		if( is_wp_error( $lang_slug ) ) {
+		if ( is_wp_error( $lang_slug ) ) {
 			return $url;
 		}
 

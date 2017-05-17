@@ -64,7 +64,7 @@ class BPPL_BuddyPress_Emails {
 	 * @since 1.0.0
 	 */
 	final public function __construct() {
-		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
+		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ) );
 
 		add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
 		add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
@@ -80,9 +80,9 @@ class BPPL_BuddyPress_Emails {
 	 *
 	 * @since 1.0.0
 	 */
-	public function reinstall_bp_emails_with_languages() {
+	public function reinstall_bp_emails() {
 		// Just add this one time!
-		remove_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails_with_languages' ) );
+		remove_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ) );
 
 		$locales = pll_languages_list( array( 'fields' => 'locale' ) );
 

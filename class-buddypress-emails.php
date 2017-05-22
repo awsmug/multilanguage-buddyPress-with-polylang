@@ -84,29 +84,34 @@ class BPPL_BuddyPress_Emails {
 		// Just add this one time!
 		remove_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ) );
 
+		$this->delete_emails();
 		$locales = pll_languages_list( array( 'fields' => 'locale' ) );
 
-		// Deleting everything created before
-		$this->delete_emails();
+		add_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
+		unload_textdomain( 'buddypress' );
+		do_action( 'bppl_unload_plugin_textdomain' );
 
 		foreach ( $locales AS $locale ) {
 			$this->temp_locale = $locale;
 
-			add_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
-			unload_textdomain( 'buddypress' );
 			load_plugin_textdomain( 'buddypress' );
+			do_action( 'bppl_load_plugin_textdomain' );
+
+
 			$installed = $this->install_emails( $locale );
 
 			if ( is_wp_error( $installed ) ) {
 				bppl_messages()->add( $installed->get_error_message() );
 				break;
 			}
-			remove_filter( 'locale', array( $this, 'set_temporary_locale' ) );
+
+			unload_textdomain( 'buddypress' );
+			do_action( 'bppl_unload_plugin_textdomain' );
 		}
 
-		// Reset to system language
-		unload_textdomain( 'buddypress' );
+		remove_filter( 'plugin_locale', array( $this, 'set_temporary_locale' ) );
 		load_plugin_textdomain( 'buddypress' );
+		do_action( 'bppl_load_plugin_textdomain' );
 
 		// Saving relations between posts
 		foreach ( $this->post_lang_rel AS $post_lang_rel ) {
@@ -352,6 +357,9 @@ class BPPL_BuddyPress_Emails {
 			return;
 		}
 
+		$default_lang = bppl()->polylang()->get_default_lang();
+		$lang_page_ids = bppl()->buddypress()->get_directory_page_ids();
+
 		$args['tokens'] = $this->replace_promote_to_string( $args['tokens'], $email_type, $user->ID );
 		$args['tokens'] = apply_filters( 'bppl_email_tokens', $args['tokens'], $email_type, $user->ID );
 
@@ -365,12 +373,10 @@ class BPPL_BuddyPress_Emails {
 		$origin_domain  = bp_core_get_root_domain();
 		$replace_domain = str_replace( '/' . $sender_lang, '/' . $recipient_lang, $origin_domain );
 
-		$lang_page_ids = bppl()->buddypress()->get_directory_page_ids();
-
-		$sender_page_ids = $lang_page_ids[ $sender_lang ];
+		$default_page_ids = $lang_page_ids[ $default_lang ];
 		$recipient_page_ids = $lang_page_ids[ $recipient_lang ];
 
-		foreach( $sender_page_ids AS $component => $page_id ) {
+		foreach( $default_page_ids AS $component => $page_id ) {
 			$origin_url = get_permalink( $page_id );
 			$replace_url = get_permalink(  $recipient_page_ids[ $component ] );
 
@@ -384,6 +390,8 @@ class BPPL_BuddyPress_Emails {
 
 	/**
 	 * Replacing promote to tokens, because used before
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param array $tokens
 	 * @param string $email_type
@@ -411,6 +419,8 @@ class BPPL_BuddyPress_Emails {
 
 	/**
 	 * Getting recipient from BuddyPress $to
+	 *
+	 * @since 1.0.0
 	 *
 	 * @param $to mixed Either a email address, user ID, WP_User object, or an array containg the address and name.
 	 *
@@ -479,7 +489,10 @@ class BPPL_BuddyPress_Emails {
 
 		foreach( $this->reload_locales AS $locale ) {
 			unload_textdomain( $locale );
+			do_action( 'bppl_unload_plugin_textdomain' );
+
 			load_plugin_textdomain( $locale );
+			do_action( 'bppl_load_plugin_textdomain' );
 		}
 	}
 
@@ -495,7 +508,10 @@ class BPPL_BuddyPress_Emails {
 
 		foreach( $this->reload_locales AS $locale ) {
 			unload_textdomain( $locale );
+			do_action( 'bppl_unload_plugin_textdomain' );
+
 			load_plugin_textdomain( $locale );
+			do_action( 'bppl_load_plugin_textdomain' );
 		}
 	}
 }

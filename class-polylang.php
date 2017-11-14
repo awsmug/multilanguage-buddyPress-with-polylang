@@ -37,6 +37,8 @@ class BPPL_Polylang {
 	 */
 	protected $user;
 
+	protected $switched;
+
 	/**
 	 * Adding Actionhooks & Co.
 	 *
@@ -50,6 +52,33 @@ class BPPL_Polylang {
 
 		// Todo: Maybe change this, because it changes the user language on opening sites of other languages
         add_action( 'pll_language_defined', array( $this, 'define_language' ), 10, 2 );
+
+        add_filter( 'option_polylang', array( $this , 'option_polylang' ), 10, 1 );
+
+		add_filter( 'pll_model', array( $this, 'pll_model') );
+		add_action( 'pll_init', array( $this, 'pll_init') );
+	}
+
+	public function option_polylang() {
+		remove_filter( 'option_polylang', array( $this , 'option_polylang' ), 10, 1 );
+		$option = get_blog_option( bp_get_root_blog_id(), 'polylang' );
+		return $option;
+	}
+
+	public function pll_model( $model ) {
+		if( ! bp_is_root_blog() ) {
+			switch_to_blog( bp_get_root_blog_id() );
+			$this->switched = true;
+		}
+
+		return $model;
+	}
+
+	public function pll_init() {
+		if( $this->switched ) {
+			$this->init_languages();
+			restore_current_blog();
+		}
 	}
 
 	/**
@@ -59,7 +88,7 @@ class BPPL_Polylang {
 	 *
 	 * @since 1.0.0
 	 */
-	private function init_languages(){
+	public function init_languages(){
 	    global $wpdb;
 
         /**

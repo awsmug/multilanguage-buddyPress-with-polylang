@@ -27,16 +27,15 @@ class BPPL_BuddyPress {
 	 * @since 1.0.0
 	 */
 	final public function __construct() {
-		// Overwriting local before polylang des it, beyause Polylang does it too late
+		// Overwriting local before polylang does it, beyause Polylang does it too late
 		add_filter( 'locale', array( $this, 'overwrite_locale' ) );
 
-		if ( is_admin() ) {
+		if ( is_admin() && ! defined('DOING_AJAX') ) {
 			return;
 		}
 
 		add_filter( 'bp_core_get_directory_page_ids', array( $this, 'replace_directory_page_ids' ) );
 		add_filter( 'bp_core_get_directory_pages', array( $this, 'replace_page_slugs' ) );
-
 	}
 
 	/**
@@ -49,13 +48,22 @@ class BPPL_BuddyPress {
 	 * @return stdClass $pages
 	 */
 	public function replace_page_slugs( $pages ) {
-		// Todo: Should check whats happening on subdomain languages and so on!
+		$switched = false;
+		if( ! bp_is_root_blog() ) {
+			switch_to_blog( bp_get_root_blog_id() );
+			$switched = true;
+		}
+
 		foreach ( $pages AS $component => $page ) {
 			$permalink = get_permalink( $page->id );
 			$path = str_replace( bp_core_get_root_domain(), '', $permalink );
 			$path = trim ( $path, '/' );
 			$page->slug = $path;
 			$pages->$component = $page;
+		}
+
+		if( $switched ) {
+			restore_current_blog();
 		}
 
 		return $pages;
@@ -127,6 +135,24 @@ class BPPL_BuddyPress {
 	}
 
 	/**
+	 * Getting a directory page ID
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $lang Language slug
+	 * @param string $component Name of the BuddyPress component
+	 *
+	 * @return mixed
+	 */
+	public function get_directory_page_id( $lang, $component ) {
+		$directory_page_ids = $this->get_directory_page_ids();
+
+		$directory_page_id = $directory_page_ids[ $lang ][ $component ];
+
+		return $directory_page_id;
+	}
+
+	/**
 	 * Overwriting Locale
 	 *
 	 * PolyLang switches language a little late. We are switching in the moment we have the language.
@@ -138,7 +164,7 @@ class BPPL_BuddyPress {
 	 * @return bool|string $detected_locale Locale which was detected for user
 	 */
 	public function overwrite_locale( $locale ) {
-		if ( null === $locale = $this->detected_locale ) {
+		if ( null === $this->detected_locale ) {
 			if ( false === $lang = $this->get_cookie_lang() ) {
 				return $locale;
 			}

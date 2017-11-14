@@ -100,9 +100,14 @@ class BPPL_Manager{
 	 *
 	 * @since 1.0.0
 	 *
+	 * @param int $user_id User ID
+	 *
 	 * @return BPPL_User
 	 */
-	public function user() {
+	public function user( $user_id = null ) {
+		if( ! empty( $user_id ) ) {
+			$this->user->set_user( $user_id );
+		}
 		return $this->user;
 	}
 
@@ -126,5 +131,16 @@ class BPPL_Manager{
 	 */
 	public function buddypress() {
 		return $this->buddypress;
+	}
+
+	/**
+	 * BuddyPress Emails object
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return BPPL_BuddyPress_Emails
+	 */
+	public function buddypress_emails() {
+		return $this->buddypress_emails;
 	}
 }

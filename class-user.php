@@ -26,8 +26,8 @@ class BPPL_User {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct() {
-		$this->init_user();
+	public function __construct( $user_id = null ) {
+		$this->set_user( $user_id );
 	}
 
 	/**
@@ -38,9 +38,16 @@ class BPPL_User {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return bool|int
+	 * @return bool|int $user_id User id on success, false on error.
 	 */
-	private function init_user() {
+	public function set_user( $user_id = null) {
+		if( ! empty( $user_id ) ) {
+			if( false === $this->user = get_user_by('id', $user_id ) ) {
+				return false;
+			}
+			return $this->user->ID;
+		}
+
 		if( false === $this->user = $this->get_logged_in_user() ) {
 			return false;
 		}
@@ -58,7 +65,7 @@ class BPPL_User {
 	 *
 	 * @param $locale
 	 *
-	 * @return int|WP_Error
+	 * @return int|WP_Error $user_id The updated user's ID or a WP_Error object if the user could not be updated.
 	 */
 	public function save_locale( $locale ) {
 		if( false === $this->user ) {
@@ -69,11 +76,11 @@ class BPPL_User {
 	}
 
 	/**
-	 * Returns current user language
+	 * Returns current user locale
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return string|WP_Error $lang
+	 * @return string|WP_Error $locale
 	 */
 	public function get_locale() {
 		if( false === $this->user ) {
@@ -83,6 +90,25 @@ class BPPL_User {
 		$locale = $this->user->locale;
 
 		return $locale;
+	}
+
+	/**
+	 * Returns current user language
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string|WP_Error $lang The lang slug of polylang
+	 */
+	public function get_lang() {
+		if( false === $this->user ) {
+			return new WP_Error( 'bppl_no_user_id_on_getting_lang', 'Can not get locale without user.' );
+		}
+
+		$locale = $this->user->locale;
+
+		$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
+
+		return $lang;
 	}
 
 	/**

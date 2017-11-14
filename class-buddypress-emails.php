@@ -64,7 +64,7 @@ class BPPL_BuddyPress_Emails {
 	 * @since 1.0.0
 	 */
 	final public function __construct() {
-		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ) );
+		add_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ), 100 );
 
 		add_filter( 'pll_get_post_types', array( $this, 'add_post_type_slug' ) );
 		add_filter( 'pll_get_taxonomies', array( $this, 'add_taxonomy' ) );
@@ -82,7 +82,7 @@ class BPPL_BuddyPress_Emails {
 	 */
 	public function reinstall_bp_emails() {
 		// Just add this one time!
-		remove_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ) );
+		remove_action( 'bp_core_install_emails', array( $this, 'reinstall_bp_emails' ), 100 );
 
 		$this->delete_emails();
 		$locales = pll_languages_list( array( 'fields' => 'locale' ) );
@@ -113,11 +113,12 @@ class BPPL_BuddyPress_Emails {
 		load_plugin_textdomain( 'buddypress' );
 		do_action( 'bppl_load_plugin_textdomain' );
 
+		$this->post_lang_rel = apply_filters( 'bppl_post_lang_rel', $this->post_lang_rel );
+
 		// Saving relations between posts
 		foreach ( $this->post_lang_rel AS $post_lang_rel ) {
 			$posts = array();
-			foreach ( $post_lang_rel AS $locale => $post_id ) {
-				$lang = bppl()->polylang()->get_lang_slug_by_locale( $locale );
+			foreach ( $post_lang_rel AS $lang => $post_id ) {
 				if ( is_wp_error( $lang ) ) {
 					bppl()->message( $lang->get_error_message() );
 					break;
@@ -160,9 +161,9 @@ class BPPL_BuddyPress_Emails {
 			if ( ! $post_id ) {
 				continue;
 			}
-			pll_set_post_language( $post_id, $locale );
+			pll_set_post_language( $post_id, $lang );
 
-			$this->post_lang_rel[ $id ][ $locale ] = $post_id;
+			$this->post_lang_rel[ $id ][ $lang ] = $post_id;
 
 			$term_id = $id . '-' . $lang;
 
@@ -182,9 +183,16 @@ class BPPL_BuddyPress_Emails {
 		/**
 		 * Fires after BuddyPress adds the posts for its emails.
 		 *
-		 * @since 2.5.0
+		 * @since 1.0.0
 		 */
 		do_action( 'bp_core_install_emails' );
+
+		/**
+		 * Fires after BuddyPress adds the posts for its emails.
+		 *
+		 * @since 1.0.0
+		 */
+		do_action( 'bppl_core_install_emails', $locale );
 
 		return true;
 	}
@@ -237,6 +245,10 @@ class BPPL_BuddyPress_Emails {
 			return $locale;
 		}
 
+		return $this->temp_locale;
+	}
+
+	public function get_temporary_locale() {
 		return $this->temp_locale;
 	}
 
@@ -350,14 +362,21 @@ class BPPL_BuddyPress_Emails {
 			return;
 		}
 
+		$switched = false;
+		if( ! bp_is_root_blog() ) {
+			switch_to_blog( bp_get_root_blog_id() );
+			$switched = true;
+		}
+
 		$this->load_user_locales( $user->ID );
 
-		$email = bp_get_email( $email_type );
-		if ( is_wp_error( $email ) ) {
+		$new_email = bp_get_email( $email_type );
+		if ( is_wp_error( $new_email ) ) {
 			return;
 		}
 
-		$default_lang = bppl()->polylang()->get_default_lang();
+		$email = $new_email;
+
 		$lang_page_ids = bppl()->buddypress()->get_directory_page_ids();
 
 		$args['tokens'] = $this->replace_promote_to_string( $args['tokens'], $email_type, $user->ID );
@@ -367,16 +386,30 @@ class BPPL_BuddyPress_Emails {
 		$email->set_to( $user->ID );
 		$email->set_tokens( $args['tokens'] );
 
-		$sender_lang    = bppl()->polylang()->get_lang_slug_by_locale( get_locale() );
+		$sender_locale  = get_locale();
+		$sender_lang    = bppl()->polylang()->get_lang_slug_by_locale( $sender_locale );
 		$recipient_lang = bppl()->polylang()->get_lang_slug_by_locale( $this->temp_locale );
 
+		if( $sender_lang === $recipient_lang ) {
+			return;
+		}
+
 		$origin_domain  = bp_core_get_root_domain();
+		
+		//patch
+		if (!is_string($sender_lang)) {     
+		                     $sender_lang='de';
+		}
+		//patch
+		
+		
+		
 		$replace_domain = str_replace( '/' . $sender_lang, '/' . $recipient_lang, $origin_domain );
 
-		$default_page_ids = $lang_page_ids[ $default_lang ];
+		$sender_page_ids = $lang_page_ids[ $sender_lang ];
 		$recipient_page_ids = $lang_page_ids[ $recipient_lang ];
 
-		foreach( $default_page_ids AS $component => $page_id ) {
+		foreach( $sender_page_ids AS $component => $page_id ) {
 			$origin_url = get_permalink( $page_id );
 			$replace_url = get_permalink(  $recipient_page_ids[ $component ] );
 
@@ -386,6 +419,10 @@ class BPPL_BuddyPress_Emails {
 		$this->replace_email_links( $email, $origin_domain, $replace_domain );
 
 		$this->reset_plugin_locales();
+
+		if( $switched ) {
+			restore_current_blog();
+		}
 	}
 
 	/**
